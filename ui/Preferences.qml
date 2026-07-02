@@ -4,6 +4,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import './components' as UIComponents
+
 
 Window {
     id: windowPreferences
@@ -32,7 +34,7 @@ Window {
     }
 
     function loadMaterialAccent(accent) {
-        for (var idx = 0; idx < comboBoxAccent.count; idx ++) {
+        for (var idx = 0; idx < comboBoxAccent.count; idx++) {
             if (accent === comboBoxAccent.valueAt(idx)) {
                 comboBoxAccent.currentIndex = idx
                 break
@@ -41,7 +43,7 @@ Window {
     }
 
     function loadMaterialTheme(theme) {
-        for (var idx = 0; idx < comboBoxTheme.count; idx ++) {
+        for (var idx = 0; idx < comboBoxTheme.count; idx++) {
             if (theme === comboBoxTheme.valueAt(idx)) {
                 comboBoxTheme.currentIndex = idx
                 break
@@ -50,19 +52,16 @@ Window {
     }
 
     function loadAutoload(toggle) {
-        if (toggle) {
-            checkBoxAutoload.checked = true
-        } else {
-            checkBoxAutoload.checked = false
-        }
+        checkBoxAutoload.checked = !!toggle
     }
 
     DialogMessage {
         id: dialogPreferencesSaved
         modal: true
+        anchors.centerIn: parent
 
-        title: "Preferences saved!"
-        message: "User preferences has been saved succesfully! Artemis restart is require for changes to take effect."
+        title: qsTr("Preferences saved!")
+        message: qsTr("User preferences have been saved successfully! An Artemis restart is required for changes to take effect.")
 
         standardButtons: Dialog.Ok
 
@@ -71,22 +70,18 @@ Window {
         }
     }
 
-
     Pane {
         anchors.fill: parent
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.rightMargin: 10
-            anchors.leftMargin: 10
-            anchors.bottomMargin: 10
-            anchors.topMargin: 10
+            anchors.margins: 10
 
             RowLayout {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "Material Theme"
+                    text: qsTr("Material Theme")
                     font.pixelSize: 12
                     clip: true
                     Layout.fillWidth: true
@@ -94,13 +89,9 @@ Window {
 
                 ComboBox {
                     id: comboBoxTheme
-                    width: 137
-                    height: 48
-                    model: [
-                        "System",
-                        "Light",
-                        "Dark"
-                    ]
+                    Layout.preferredWidth: 137
+                    Layout.preferredHeight: 48
+                    model: ["System", "Light", "Dark"]
                 }
             }
 
@@ -108,7 +99,7 @@ Window {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "Material Accent"
+                    text: qsTr("Material Accent")
                     font.pixelSize: 12
                     clip: true
                     Layout.fillWidth: true
@@ -116,28 +107,13 @@ Window {
 
                 ComboBox {
                     id: comboBoxAccent
-                    width: 137
-                    height: 48
+                    Layout.preferredWidth: 137
+                    Layout.preferredHeight: 48
                     model: [
-                        "Red",
-                        "Pink",
-                        "Purple",
-                        "DeepPurple",
-                        "Indigo",
-                        "Blue",
-                        "LightBlue",
-                        "Cyan",
-                        "Teal",
-                        "Green",
-                        "LightGreen",
-                        "Lime",
-                        "Yellow",
-                        "Amber",
-                        "Orange",
-                        "DeepOrange",
-                        "Brown",
-                        "Grey",
-                        "BlueGrey"
+                        "Red", "Pink", "Purple", "DeepPurple", "Indigo",
+                        "Blue", "LightBlue", "Cyan", "Teal", "Green",
+                        "LightGreen", "Lime", "Yellow", "Amber", "Orange",
+                        "DeepOrange", "Brown", "Grey", "BlueGrey"
                     ]
                 }
             }
@@ -146,7 +122,7 @@ Window {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "Auto-load SigID database on startup (latest version)"
+                    text: qsTr("Auto-load SigID database on startup (latest version)")
                     font.pixelSize: 12
                     clip: true
                     Layout.fillWidth: true
@@ -161,10 +137,9 @@ Window {
                 Layout.fillHeight: true
             }
 
-            Button {
+            UIComponents.CustomButton {
                 text: qsTr("Save")
-                icon.source: "qrc:/data/images/icons/save.svg"
-                display: AbstractButton.TextBesideIcon
+                type: "success"
                 Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                 onClicked: {
                     saveAll()
