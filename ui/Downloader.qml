@@ -52,7 +52,7 @@ Window {
             anchors.margins: 10
 
             Label {
-                text: qsTr("Downloading in progress...")
+                text: qsTr("Download in progress...")
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             }
 
