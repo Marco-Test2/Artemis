@@ -425,7 +425,7 @@ Window {
 
             Menu {
                 id: filterMenu
-                title: anyFilterActive() ? qsTr("Filter ●") : qsTr("Filter")
+                title: anyFilterActive() ? qsTr("Filter •") : qsTr("Filter")
 
                 MenuItem {
                     text: qsTr("Frequency")
@@ -433,7 +433,7 @@ Window {
 
                     contentItem: Label {
                         text: filterFrequency.isFilterActive
-                            ? qsTr("Frequency ●")
+                            ? qsTr("Frequency •")
                             : qsTr("Frequency")
 
                         color: filterFrequency.isFilterActive
@@ -448,7 +448,7 @@ Window {
 
                     contentItem: Label {
                         text: filterBandwidth.isFilterActive
-                            ? qsTr("Bandwidth ●")
+                            ? qsTr("Bandwidth •")
                             : qsTr("Bandwidth")
 
                         color: filterBandwidth.isFilterActive
@@ -463,7 +463,7 @@ Window {
 
                     contentItem: Label {
                         text: filterACF.isFilterActive
-                            ? qsTr("ACF ●")
+                            ? qsTr("ACF •")
                             : qsTr("ACF")
 
                         color: filterACF.isFilterActive
@@ -478,7 +478,7 @@ Window {
 
                     contentItem: Label {
                         text: filterModulation.isFilterActive
-                            ? qsTr("Modulation ●")
+                            ? qsTr("Modulation •")
                             : qsTr("Modulation")
 
                         color: filterModulation.isFilterActive
@@ -493,7 +493,7 @@ Window {
 
                     contentItem: Label {
                         text: filterCategory.isFilterActive
-                            ? qsTr("Category ●")
+                            ? qsTr("Category •")
                             : qsTr("Category")
 
                         color: filterCategory.isFilterActive
@@ -508,7 +508,7 @@ Window {
 
                     contentItem: Label {
                         text: filterLocation.isFilterActive
-                            ? qsTr("Location ●")
+                            ? qsTr("Location •")
                             : qsTr("Location")
 
                         color: filterLocation.isFilterActive
@@ -534,7 +534,7 @@ Window {
 
             Menu {
                 id: aboutMenu
-                title: updateAvailable ? qsTr("Help ●") : qsTr("Help")
+                title: updateAvailable ? qsTr("Help •") : qsTr("Help")
 
                 MenuItem {
                     id: checkForUpdatesItem
@@ -543,7 +543,7 @@ Window {
 
                     contentItem: Label {
                         text: updateAvailable
-                            ? qsTr("Check for Updates ●")
+                            ? qsTr("Check for Updates •")
                             : qsTr("Check for Updates")
 
                         color: updateAvailable
