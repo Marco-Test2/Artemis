@@ -4,6 +4,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import './components' as UIComponents
+
 
 Window {
     id: windowCategoryEditor
@@ -20,29 +22,29 @@ Window {
     modality: Qt.ApplicationModal
     flags: Qt.Window
 
+    property var currentSelectedItem: null
+
     signal saveParam(var data, bool isNew)
     signal deleteParam(int clbId)
 
     function loadList(dict) {
         clearAll()
-        for (var i = 0; i < dict.length; i++) {
-            myModel.append(dict[i])
-        }
-    }
 
-    function itemChanged() {
-        var selected_cat = myModel.get(listView.currentIndex)
-        if (selected_cat !== undefined) {
-            renameButton.enabled = true
-            deleteButton.enabled = true
-        } else {
-            renameButton.enabled = false
-            deleteButton.enabled = false
+        var mappedList = []
+        for (var i = 0; i < dict.length; i++) {
+            mappedList.push({
+                clb_id: dict[i].clb_id,
+                name: dict[i].value ? dict[i].value : "",
+                description: ""
+            })
         }
+        
+        customCategoryList.populateList(mappedList)
     }
 
     function clearAll() {
-        myModel.clear()
+        currentSelectedItem = null
+        customCategoryList.clearList()
     }
 
     DialogMessage {
@@ -54,7 +56,9 @@ Window {
         standardButtons: Dialog.Cancel | Dialog.Yes
 
         onAccepted: {
-            deleteParam(myModel.get(listView.currentIndex).clb_id)
+            if (currentSelectedItem) {
+                deleteParam(currentSelectedItem.clb_id)
+            }
         }
     }
 
@@ -85,6 +89,7 @@ Window {
 
         onAccepted: {
             saveParam([newCatName.text], true)
+            newCatName.clear()
         }
     }
 
@@ -114,13 +119,15 @@ Window {
         }
 
         onAccepted: {
-            saveParam(
-                [
-                    renameCatName.text,
-                    myModel.get(listView.currentIndex).clb_id
-                ],
-                false
-            )
+            if (currentSelectedItem) {
+                saveParam(
+                    [
+                        renameCatName.text,
+                        currentSelectedItem.clb_id
+                    ],
+                    false
+                )
+            }
         }
     }
 
@@ -138,27 +145,21 @@ Window {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                ListView {
-                    id: listView
+                UIComponents.ArtemisListView {
+                    id: customCategoryList
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    highlightMoveDuration: 0
-                    highlight: Rectangle { color: Material.accent; radius: 5 }
-                    onCurrentIndexChanged: { itemChanged() }
-                    delegate: Item {
-                        id: listDelegate
-                        width: ListView.view.width
-                        height: 20
-                        Label { text: value }
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                listView.currentIndex = index
-                            }
-                        }
+
+                    onItemSelected: (selectedItem) => {
+                        currentSelectedItem = selectedItem
+                        renameButton.enabled = true
+                        deleteButton.enabled = true
                     }
-                    model: ListModel {
-                        id: myModel
+
+                    onSelectionCleared: {
+                        currentSelectedItem = null
+                        renameButton.enabled = false
+                        deleteButton.enabled = false
                     }
                 }
             }
@@ -166,47 +167,53 @@ Window {
             RowLayout {
                 Layout.fillWidth: true
 
-                Button {
-                    id: addButton
-                    text: qsTr("Add")
-                    onClicked: {
-                        dialogNewCat.open()
-                    }
-                    icon.source: "qrc:/data/images/icons/add.svg"
-                    display: AbstractButton.TextBesideIcon
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Button {
-                    id: renameButton
-                    text: qsTr("Rename")
-                    onClicked: {
-                        dialogRenameCat.open()
-                    }
-                    icon.source: "qrc:/data/images/icons/rename.svg"
-                    enabled: false
-                    display: AbstractButton.TextBesideIcon
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Button {
+                UIComponents.ArtemisButton {
                     id: deleteButton
                     text: qsTr("Delete")
+                    type: "danger"
+                    enabled: false
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    icon.source: "qrc:/data/images/icons/delete.svg"
+                    display: AbstractButton.TextBesideIcon
                     onClicked: {
                         dialogDeleteConfirmation.open()
                     }
-                    icon.source: "qrc:/data/images/icons/delete.svg"
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                UIComponents.ArtemisButton {
+                    id: renameButton
+                    text: qsTr("Rename")
+                    type: "warning"
                     enabled: false
-                    display: AbstractButton.TextBesideIcon
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    icon.source: "qrc:/data/images/icons/rename.svg"
+                    display: AbstractButton.TextBesideIcon
+                    onClicked: {
+                        if (currentSelectedItem) {
+                            renameCatName.text = currentSelectedItem.name
+                        }
+                        dialogRenameCat.open()
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                UIComponents.ArtemisButton {
+                    id: addButton
+                    text: qsTr("Add")
+                    type: "success"
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    icon.source: "qrc:/data/images/icons/add.svg"
+                    display: AbstractButton.TextBesideIcon
+                    onClicked: {
+                        dialogNewCat.open()
+                    }
                 }
             }
         }
