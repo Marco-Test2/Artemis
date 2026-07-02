@@ -137,9 +137,11 @@ Window {
                 Layout.fillHeight: true
             }
 
-            UIComponents.CustomButton {
+            UIComponents.ArtemisButton {
                 text: qsTr("Save")
                 type: "success"
+                icon.source: "qrc:/data/images/icons/save.svg"
+                display: AbstractButton.TextBesideIcon
                 Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                 onClicked: {
                     saveAll()
