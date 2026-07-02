@@ -175,11 +175,13 @@ Window {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 Layout.fillWidth: true
 
-                UIComponents.CustomButton {
+                UIComponents.ArtemisButton {
                     id: deleteButton
                     text: qsTr("Delete")
                     visible: isNew ? false : true
                     type: "danger"
+                    icon.source: "qrc:/data/images/icons/delete.svg"
+                    display: AbstractButton.TextBesideIcon
                     onClicked: {
                         dialogDeleteConfirmation.open()
                     }
@@ -189,10 +191,12 @@ Window {
                     Layout.fillWidth: true
                 }
 
-                UIComponents.CustomButton {
+                UIComponents.ArtemisButton {
                     id: saveButton
                     text: qsTr("Save")
                     type: "success"
+                    icon.source: "qrc:/data/images/icons/save.svg"
+                    display: AbstractButton.TextBesideIcon
                     onClicked: {
                         save()
                     }
