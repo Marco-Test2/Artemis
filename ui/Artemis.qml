@@ -40,65 +40,22 @@ Window {
     signal applyFilter(var filterDict)
 
     // MARK: Properties
-    property var loadedList: []
     property var filterDict: ({})
     property bool updateAvailable: false
+    property var currentSelectedSignal: null
 
     // MARK: Functions
-    function populateList(signalsList) {
-        loadedList = signalsList
-        textFieldSearch.enabled = true
-        var currentIndex = listView.currentIndex
-        refreshList()
-        if (currentIndex >= 0 && currentIndex < listModel.count) {
-            listView.currentIndex = currentIndex
-        }
-    }
-
-    function refreshList() {
-        listModel.clear()
-        if (!loadedList) return
-
-        var search = textFieldSearch.text.toLowerCase().trim()
-
-        if (search === "") {
-            for (var i = 0; i < loadedList.length; i++) {
-                listModel.append(loadedList[i])
-            }
-        } else {
-            for (var j = 0; j < loadedList.length; j++) {
-                var name = loadedList[j].name ? loadedList[j].name.toLowerCase() : ""
-                var description = loadedList[j].description ? loadedList[j].description.toLowerCase() : ""
-                if (name.includes(search) || description.includes(search)) {
-                    listModel.append(loadedList[j])
-                }
-            }
-        }
-        itemChangedList()
-    }
-
-    function itemChangedList() {
-        var selected_sig = listModel.get(listView.currentIndex)
-        if (selected_sig !== undefined && selected_sig !== null) {
-            loadSignal(selected_sig.SIG_ID)
-            editSignalMenu.enabled = true
-        } else {
-            editSignalMenu.enabled = false
-        }
-    }
-
-    function clearList() {
-        listModel.clear()
-        loadedList = []
-        textFieldSearch.clear()
-        textFieldSearch.enabled = false
-    }
-
     function lockMenu(toggle) {
         openFileMenu.enabled = !toggle
         exportFileMenu.enabled = !toggle
         newSignalMenu.enabled = !toggle
         editCategoryMenu.enabled = !toggle
+        newFrequencyMenu.enabled = !toggle
+        newBandMenu.enabled = !toggle
+        newModeMenu.enabled = !toggle
+        newModulationMenu.enabled = !toggle
+        newACFMenu.enabled = !toggle
+        newLocationMenu.enabled = !toggle
     }
 
     function bottomInfoBar(message, messageType) {
@@ -161,12 +118,6 @@ Window {
             filterFrequency.isFilterActive ||
             filterBandwidth.isFilterActive ||
             filterACF.isFilterActive
-    }
-
-    // Return "black" o "white" based on the luminance
-    function contrastTextColor(color) {
-        let luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b
-        return luminance > 0.55 ? "black" : "white"
     }
 
     // MARK: FILTERS
@@ -407,21 +358,68 @@ Window {
 
             Menu {
                 id: signalMenu
-                title: qsTr("Signal")
+                title: qsTr("Edit")
+
                 MenuItem {
                     id: newSignalMenu
                     enabled: false
-                    text: "New.."
+                    text: "New Signal"
                     onClicked: openSigEditor('Signal', [], true)
                 }
+
                 MenuItem {
                     id: editSignalMenu
                     enabled: false
-                    text: "Edit..."
+                    text: "Edit Name/Description"
                     onClicked: {
-                        var currentSig = listModel.get(listView.currentIndex)
-                        if (currentSig) openSigEditor('Signal', currentSig, false)
+                        if (currentSelectedSignal) {
+                            openSigEditor('Signal', currentSelectedSignal, false)
+                        }
                     }
+                }
+
+                MenuSeparator {}
+
+                MenuItem {
+                    id: newFrequencyMenu
+                    enabled: false
+                    text: "Add Frequency"
+                    onClicked: openSigEditor('Frequency', [], true)
+                }
+
+                MenuItem {
+                    id: newBandMenu
+                    enabled: false
+                    text: "Add Bandwidth"
+                    onClicked: openSigEditor('Bandwidth', [], true)
+                }
+
+                MenuItem {
+                    id: newModulationMenu
+                    enabled: false
+                    text: "Add Modulation"
+                    onClicked: openSigEditor('Modulation', [], true)
+                }
+
+                MenuItem {
+                    id: newModeMenu
+                    enabled: false
+                    text: "Add Mode"
+                    onClicked: openSigEditor('Mode', [], true)
+                }
+
+                MenuItem {
+                    id: newACFMenu
+                    enabled: false
+                    text: "Add ACF"
+                    onClicked: openSigEditor('ACF', [], true)
+                }
+
+                MenuItem {
+                    id: newLocationMenu
+                    enabled: false
+                    text: "Add Location"
+                    onClicked: openSigEditor('Location', [], true)
                 }
             }
 
@@ -596,95 +594,56 @@ Window {
             anchors.fill: parent
             orientation: Qt.Horizontal
 
-            // MARK: Left panel
-            ColumnLayout {
+            handle: Rectangle {
+                implicitWidth: 4
+                color: SplitHandle.pressed ? Qt.lighter(Material.accent, 1.0)
+                    : (SplitHandle.hovered ? Qt.lighter(Material.accent, 1.5) : "transparent")
+            }
+
+            Item {
                 SplitView.preferredWidth: 250
                 SplitView.minimumWidth: 200
                 SplitView.maximumWidth: 450
-                Layout.fillHeight: true
 
-                TextField {
-                    id: textFieldSearch
-                    Layout.preferredHeight: 40
-                    Layout.topMargin: 5
-                    Layout.fillWidth: true
-                    enabled: false
-                    placeholderText: qsTr("Search")
-                    onTextChanged: refreshList()
-                }
+                UIComponents.ArtemisListView {
+                    id: customSignalList
+                    objectName: "signalListObj"
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 0
+                    anchors.fill: parent
+                    anchors.rightMargin: 10
 
-                    ListView {
-                        id: listView
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        highlightMoveDuration: 0
-                        clip: true
-                        ScrollBar.vertical: bar
-
-                        highlight: Rectangle { 
-                            color: Qt.alpha(Material.accent, 0.85)
-                            radius: 4 
-                        }
-                        onCurrentIndexChanged: itemChangedList()
-                        
-                        delegate: Item {
-                            id: listDelegate
-                            width: listView.width
-                            height: 25
-
-                            HoverHandler {
-                                id: hoverHandler
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: Qt.alpha(Material.accent, 0.15)
-                                radius: 4
-                                visible: hoverHandler.hovered && listView.currentIndex !== index
-                            }
-
-                            Label {
-                                text: model.name ? model.name : "" 
-                                anchors.left: parent.left
-                                anchors.leftMargin: 10
-                                anchors.right: parent.right 
-                                anchors.rightMargin: 8      
-                                anchors.verticalCenter: parent.verticalCenter
-
-                                color: listView.currentIndex === index ? contrastTextColor(Material.accent) : Material.foreground
-                                font.weight: listView.currentIndex === index ? Font.Bold : Font.Normal
-                                elide: Text.ElideRight
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: listView.currentIndex = index
-                            }
-                        }
-                        model: ListModel { id: listModel }
+                    onItemSelected: (selectedItem) => {
+                        currentSelectedSignal = selectedItem
+                        loadSignal(selectedItem.SIG_ID) 
+                        editSignalMenu.enabled = true
+                        newFrequencyMenu.enabled = true
+                        newBandMenu.enabled = true
+                        newModeMenu.enabled = true
+                        newModulationMenu.enabled = true
+                        newACFMenu.enabled = true
+                        newLocationMenu.enabled = true
                     }
 
-                    ScrollBar {
-                        id: bar
-                        Layout.fillHeight: true
-                        implicitWidth: 8
-                        active: true
-                        policy: ScrollBar.AsNeeded
+                    onSelectionCleared: {
+                        currentSelectedSignal = null
+                        editSignalMenu.enabled = false
+                        newFrequencyMenu.enabled = false
+                        newBandMenu.enabled = false
+                        newModeMenu.enabled = false
+                        newModulationMenu.enabled = false
+                        newACFMenu.enabled = false
+                        newLocationMenu.enabled = false
                     }
                 }
             }
 
             // MARK: Right panel
-            SignalPage {
-                id: signalPage
+            Item {
                 SplitView.fillWidth: true
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                SignalPage {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                }
             }
         }
     }

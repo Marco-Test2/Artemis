@@ -52,6 +52,7 @@ class UIArtemis(QObject):
         self._window = self._engine.rootObjects()[0]
 
         self._window_signal = self._window.findChild(QObject, "signalPageObj")
+        self._window_signal_list = self._window.findChild(QObject, "signalListObj") # <--- MODIFICATO (Nuovo riferimento)
 
         self.loaded_db = None
 
@@ -96,13 +97,14 @@ class UIArtemis(QObject):
 
         # Python > QML connections
         self.close_ui.connect(self._window.close)
-        self.populate_sig_list.connect(self._window.populateList)
-        self.clear_list.connect(self._window.clearList)
         self.update_info_bar.connect(self._window.bottomInfoBar)
         self.show_dialog_popup.connect(self._window.openGeneralDialog)
         self.show_dialog_download_db.connect(self._window.openDialogDownloadDb)
         self.show_dialog_update_artemis.connect(self._window.openDialogUpdateArtemis)
         self.lock_menu.connect(self._window.lockMenu)
+
+        self.populate_sig_list.connect(self._window_signal_list.populateList)
+        self.clear_list.connect(self._window_signal_list.clearList)
 
         self.populate_sig_details.connect(self._window_signal.populateSignalParam)
         self.lock_audio_player.connect(self._window_signal.lockPlayer)
