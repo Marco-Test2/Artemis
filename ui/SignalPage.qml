@@ -173,13 +173,11 @@ Page {
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             Repeater {
                 model: categoryList
-                delegate: Button {
+                delegate: UIComponents.ArtemisButton {
                     text: modelData[1]
-                    Layout.preferredHeight: 25
-                    highlighted: true
-                    bottomInset: 3
-                    topInset: 3
-                    flat: false
+                    Layout.preferredHeight: 30
+                    visibleBackground: true
+
                     ToolTip {
                         visible: hovered
                         text: 'Click to remove'
@@ -190,13 +188,12 @@ Page {
                 }
             }
 
-            Button {
+            UIComponents.ArtemisButton {
                 id: addTagButton
                 enabled: false
-                Layout.preferredHeight: 25
-                Layout.preferredWidth: 25
-                bottomInset: 3
-                topInset: 3
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                visibleBackground: true
                 text: '+'
                 onClicked: {
                     dialogAddCategory.open()
