@@ -4,6 +4,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import './components' as UIComponents
+
 
 Window {
     id: windowDownloader
@@ -71,12 +73,12 @@ Window {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             }
 
-            Button {
+            UIComponents.ArtemisButton {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                text: qsTr("Abort")
-                icon.source: "qrc:/data/images/icons/abort.svg"
+                text: qsTr("Cancel")
+                icon.source: "qrc:/data/images/icons/cancel.svg"
+                type: "danger"
                 display: AbstractButton.TextBesideIcon
-                flat: true
                 onClicked: { abortRequested() }
             }
         }
