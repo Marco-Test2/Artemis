@@ -64,7 +64,6 @@ class FiltersManager(QObject):
                 ############### TEMPORARY CODE UNTIL ORM IMPLEMENTATION ############
 
                 filter_query = generate_filter_query(filter_status)
-                print(filter_query)
                 self._parent.loaded_db.select_by_filter(filter_query)
 
                 self._parent.clear_signal_page.emit()
