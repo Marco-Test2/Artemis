@@ -542,11 +542,11 @@ Window {
                     text: qsTr("Check for Updates")
 
                     contentItem: Label {
-                        text: checkForUpdatesItem.enabled
+                        text: updateAvailable
                             ? qsTr("Check for Updates ●")
                             : qsTr("Check for Updates")
 
-                        color: checkForUpdatesItem.enabled
+                        color: updateAvailable
                             ? Material.color(Material.Red)
                             : Material.foreground
                     }
