@@ -114,21 +114,9 @@ Page {
         if (toggle) {
             urlButton.visible = false
             docManagerButton.visible = false
-            freqButton.enabled = false
-            bandButton.enabled = false
-            modulationButton.enabled = false
-            modeButton.enabled = false
-            acfButton.enabled = false
-            locationButton.enabled = false
             addTagButton.enabled = false
         } else {
             docManagerButton.visible = true
-            freqButton.enabled = true
-            bandButton.enabled = true
-            modulationButton.enabled = true
-            modeButton.enabled = true
-            acfButton.enabled = true
-            locationButton.enabled = true
             addTagButton.enabled = true
         }
     }
@@ -283,288 +271,270 @@ Page {
                 height: 100
 
                 RowLayout {
-                    Button {
-                        id: freqButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "FREQUENCY"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        Layout.minimumWidth: 120
-                        height: 25
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('Frequency', [], true)
-                        }
+                    id: frequencyRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "FREQUENCY"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: frequencyFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: frequencyFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: frequencyList
-                        delegate: Button {
-                            text: modelData[3]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('Frequency', modelData, false)
+
+                        Repeater {
+                            model: frequencyList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[3]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('Frequency', modelData, false)
+                                }
                             }
                         }
                     }
                 }
 
                 RowLayout {
-                    Button {
-                        id: bandButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "BANDWIDTH"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        Layout.minimumWidth: 120
-                        height: 25
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('Bandwidth', [], true)
-                        }
+                    id: bandwidthRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "BANDWIDTH"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: bandwidthFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: bandwidthFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: bandwidthList
-                        delegate: Button {
-                            text: modelData[3]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('Bandwidth', modelData, false)
+
+                        Repeater {
+                            model: bandwidthList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[3]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('Bandwidth', modelData, false)
+                                }
                             }
                         }
                     }
                 }
 
                 RowLayout {
-                    Button {
-                        id: modulationButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "MODULATION"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        Layout.minimumWidth: 120
-                        height: 25
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('Modulation', [], true)
-                        }
+                    id: modulationRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "MODULATION"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: modulationFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: modulationFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: modulationList
-                        delegate: Button {
-                            text: modelData[1]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('Modulation', modelData, false)
+
+                        Repeater {
+                            model: modulationList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[1]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('Frequency', modelData, false)
+                                }
                             }
                         }
                     }
                 }
 
                 RowLayout {
-                    Button {
-                        id: modeButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "MODE"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        Layout.minimumWidth: 120
-                        height: 25
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('Mode', [], true)
-                        }
+                    id: modeRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "MODE"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: modeFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: modeFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: modeList
-                        delegate: Button {
-                            text: modelData[1]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('Mode', modelData, false)
+
+                        Repeater {
+                            model: modeList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[1]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('Mode', modelData, false)
+                                }
                             }
                         }
                     }
                 }
 
                 RowLayout {
-                    Button {
-                        id: acfButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "ACF"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        height: 25
-                        Layout.minimumWidth: 120
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('ACF', [], true)
-                        }
+                    id: acfRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "ACF"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: acfFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: acfFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: acfList
-                        delegate: Button {
-                            text: modelData[1]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('ACF', modelData, false)
+
+                        Repeater {
+                            model: acfList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[1]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('ACF', modelData, false)
+                                }
                             }
                         }
                     }
                 }
 
                 RowLayout {
-                    Button {
-                        id: locationButton
-                        enabled: false
-                        contentItem: Label {
-                            text: "LOCATION"
-                            horizontalAlignment : Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        Layout.minimumWidth: 120
-                        height: 25
-                        flat: true
-                        bottomInset: 0
-                        topInset: 0
-                        rightPadding: 10
-                        leftPadding: 10
-                        bottomPadding: 0
-                        topPadding: 0
-                        onClicked: {
-                            openSigEditor('Location', [], true)
-                        }
+                    id: locationRow
+                    spacing: 15
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "LOCATION"
+                        font.pixelSize: 14
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                        Layout.alignment: Qt.AlignVCenter
                     }
-                    ListView {
-                        height: 25
+
+                    Rectangle {
+                        width: 2
+                        color: Material.accent
+                        Layout.preferredHeight: locationFlow.childrenRect.height 
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Flow {
+                        id: locationFlow
                         Layout.fillWidth: true
                         spacing: 5
-                        orientation: ListView.Horizontal
-                        clip: true
-                        model: locationList
-                        delegate: Button {
-                            text: modelData[1]
-                            height: 25
-                            bottomInset: 3
-                            topInset: 3
-                            flat: false
-                            ToolTip {
-                                visible: modelData[2] !== '' ? hovered : false
-                                text: modelData[2]
-                            }
-                            onClicked: {
-                                openSigEditor('Location', modelData, false)
+
+                        Repeater {
+                            model: locationList
+                            delegate: UIComponents.ArtemisButton {
+                                width: implicitWidth 
+                                height: 30
+                                text: modelData[1]
+                                visibleBackground: true
+
+                                ToolTip {
+                                    visible: modelData[2] !== '' ? hovered : false
+                                    text: modelData[2]
+                                }
+                                onClicked: {
+                                    openSigEditor('Location', modelData, false)
+                                }
                             }
                         }
                     }
@@ -614,26 +584,28 @@ Page {
                     Layout.fillHeight: true
                 }
 
-                RowLayout {
+                ColumnLayout {
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-                    RoundButton {
+                    UIComponents.ArtemisButton {
                         id: urlButton
+                        text: qsTr("Sigid Wiki")
                         icon.source: "qrc:/data/images/icons/browser.svg"
-                        display: AbstractButton.IconOnly
-                        visible: false
-                        text: "U"
+                        display: AbstractButton.TextBesideIcon
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                        Layout.fillWidth: true
                         onClicked: {
                             Qt.openUrlExternally(urlSigidwiki)
                         }
                     }
 
-                    RoundButton {
+                    UIComponents.ArtemisButton {
                         id: docManagerButton
+                        text: qsTr("Open Documents")
                         icon.source: "qrc:/data/images/icons/documents.svg"
-                        display: AbstractButton.IconOnly
-                        visible: false
-                        text: "D"
+                        display: AbstractButton.TextBesideIcon
+                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                        Layout.fillWidth: true
                         onClicked: {
                             openDocManager()
                         }
@@ -641,8 +613,5 @@ Page {
                 }
             }
         }
-
-
-
     }
 }

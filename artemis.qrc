@@ -51,6 +51,7 @@
         <file>ui/components/BandBar.qml</file>
         <file>ui/components/FilterListDialog.qml</file>
         <file>ui/components/FilterRangeDialog.qml</file>
-        <file>ui/components/CustomButton.qml</file>
+        <file>ui/components/ArtemisButton.qml</file>
+        <file>ui/components/ArtemisListView.qml</file>
     </qresource>
 </RCC>
