@@ -280,20 +280,79 @@ Window {
         }
     }
 
+    // MARK: Export DB
     FileDialog {
         id: exportDialog
         title: "Please choose a save folder..."
         fileMode: FileDialog.SaveFile
         nameFilters: ["All files (*)"]
-        onAccepted: exportDb(selectedFile)
+        onAccepted: {
+            operationPopup.message = "Exporting..."
+            operationPopup.open()
+            exportTimer.start()
+        }
     }
 
+    Timer {
+        id: exportTimer
+        interval: 50
+        repeat: false
+        onTriggered: {
+            exportDb(exportDialog.selectedFile)
+            operationPopup.close()
+        }
+    }
+
+    // MARK: Import DB
     FileDialog {
         id: importDialog
         title: "Please choose a valid tar.gz archive..."
         fileMode: FileDialog.OpenFile
         nameFilters: ["All files (*)"]
-        onAccepted: importDb(selectedFile)
+        onAccepted: {
+            operationPopup.message = "Importing..."
+            operationPopup.open()
+            importTimer.start()
+        }
+    }
+
+    Timer {
+        id: importTimer
+        interval: 50
+        repeat: false
+        onTriggered: {
+            importDb(importDialog.selectedFile)
+            operationPopup.close()
+        }
+    }
+
+    Popup {
+        id: operationPopup
+
+        property alias message: popupText.text
+
+        anchors.centerIn: parent
+        width: 200
+        height: 80
+        modal: true
+        focus: true
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            color: "#333333"
+            radius: 8
+            border.color: "#555555"
+            border.width: 1
+        }
+
+        Text {
+            id: popupText
+            text: ""
+            color: "white"
+            font.pointSize: 14
+            font.bold: true
+            anchors.centerIn: parent
+        }
     }
 
     About {
