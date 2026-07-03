@@ -7,7 +7,6 @@ from artemis.utils.constants import Constants, Messages
 from artemis.utils.sys_utils import open_directory, make_tar, unpack_tar
 from artemis.utils.sql_utils import ArtemisDatabase, ArtemisSignal
 from artemis.utils.update_utils import UpdateManager
-from artemis.utils.generic_utils import generate_filter_query
 from artemis.utils.path_utils import normalize_dialog_path
 from artemis.utils.path_utils import DATA_DIR
 from artemis.utils.config_utils import CONFIGURE_QT
@@ -19,6 +18,7 @@ from artemis.ui.downloader import UIDownloader
 from artemis.ui.spaceweather import UIspaceweather
 from artemis.ui.documentsmanager import UIdocumentsmanager
 from artemis.ui.categoryeditor import UIcategoryeditor
+from artemis.ui.filters import FiltersManager
 
 import artemis.resources
 
@@ -28,11 +28,9 @@ class UIArtemis(QObject):
     close_ui = Signal()
     populate_sig_list = Signal(list)
     populate_sig_details = Signal(list)
-    populate_filter_modulation = Signal(list)
     
     clear_list = Signal()
     clear_signal_page = Signal()
-    clear_filter_page = Signal()
     lock_audio_player = Signal()
     lock_menu = Signal(bool)
 
@@ -53,8 +51,8 @@ class UIArtemis(QObject):
         self._engine.load('qrc:/ui/Artemis.qml')
         self._window = self._engine.rootObjects()[0]
 
-        self._window_filter = self._window.findChild(QObject, "filterPageObj")
         self._window_signal = self._window.findChild(QObject, "signalPageObj")
+        self._window_signal_list = self._window.findChild(QObject, "signalListObj") # <--- MODIFICATO (Nuovo riferimento)
 
         self.loaded_db = None
 
@@ -69,6 +67,7 @@ class UIArtemis(QObject):
         self.cateditor = UIcategoryeditor(self)
         self.downloader = UIDownloader(self)
 
+        self.filters_manager = FiltersManager(self)
         self.update_manager = UpdateManager(self)
 
         self.autoload_db()
@@ -91,9 +90,6 @@ class UIArtemis(QObject):
         self._window.exportDb.connect(self.export_db)
         self._window.importDb.connect(self.import_db)
 
-        self._window_filter.applyFilter.connect(self.apply_filter)
-        self._window_filter.sendBottomAlert.connect(self.bottom_info_bar)
-
         self._window_signal.openDocManager.connect(self.show_documentsmanager_ui)
         self._window_signal.openSigEditor.connect(self.open_sig_editor)
         self._window_signal.deleteCatTag.connect(self.delete_cat_tag)
@@ -101,20 +97,18 @@ class UIArtemis(QObject):
 
         # Python > QML connections
         self.close_ui.connect(self._window.close)
-        self.populate_sig_list.connect(self._window.populateList)
-        self.clear_list.connect(self._window.clearList)
         self.update_info_bar.connect(self._window.bottomInfoBar)
         self.show_dialog_popup.connect(self._window.openGeneralDialog)
         self.show_dialog_download_db.connect(self._window.openDialogDownloadDb)
         self.show_dialog_update_artemis.connect(self._window.openDialogUpdateArtemis)
         self.lock_menu.connect(self._window.lockMenu)
 
+        self.populate_sig_list.connect(self._window_signal_list.populateList)
+        self.clear_list.connect(self._window_signal_list.clearList)
+
         self.populate_sig_details.connect(self._window_signal.populateSignalParam)
         self.lock_audio_player.connect(self._window_signal.lockPlayer)
         self.clear_signal_page.connect(self._window_signal.resetAll)
-        
-        self.clear_filter_page.connect(self._window_filter.resetAll)
-        self.populate_filter_modulation.connect(self._window_filter.loadLists)
 
 
     def load_db(self, db_dir_name):
@@ -129,9 +123,8 @@ class UIArtemis(QObject):
         # Clearing UI
         self.lock_menu.emit(False)
         self.clear_signal_page.emit()
-        self.clear_filter_page.emit()
         # Populating UI
-        self.load_filter_lists()
+        self.filters_manager.load_filter_lists()
         self.populate_sig_list.emit(self.loaded_db.all_signals)
         # Updating status bar
         total_signals = len(self.loaded_db.all_signals)
@@ -150,39 +143,6 @@ class UIArtemis(QObject):
         sig_dic = self.loaded_sig.generate_dic()
 
         self.populate_sig_details.emit([sig_dic])
-
-
-    def load_filter_lists(self):
-        """ Populates the 3 listviews in the FilterPage
-        """
-        self.populate_filter_modulation.emit([{
-            'modulation': self.loaded_db.all_modulation,
-            'location': self.loaded_db.all_location,
-            'category': self.loaded_db.all_category_labels
-        }])
-
-
-    @Slot(dict)
-    def apply_filter(self, filter_status):
-        """ Update the signal list according to the selected filters in the FilterPage.
-
-        Args:
-            filter_status (dic): dictionary containing the active filters with all
-            the details to generate a search query
-        """
-        filter_status = filter_status.toVariant()
-        if self.loaded_db is not None:
-            if filter_status != {}:
-                filter_query = generate_filter_query(filter_status)
-                self.loaded_db.select_by_filter(filter_query)
-                
-                self.clear_signal_page.emit()
-                self.populate_sig_list.emit(self.loaded_db.all_signals)
-
-                total_signals = len(self.loaded_db.all_signals)
-                self.bottom_info_bar("FILTERS ACTIVE: {} signals found".format(total_signals), "warning")
-            else:
-                self.load_db(self.loaded_db.db_dir_name)
 
 
     def show_pref_ui(self):

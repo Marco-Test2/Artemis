@@ -9,6 +9,13 @@
 
 - Added indicator if a DB and/or Artemis update is available on the main menu
 - Added native support and official packages for Arch Linux and derived distributions utilizing the pacman package manager.
+- Added official support and binaries (.pkg.tar.zst) for x64 arch-based distros along rpm and deb packages. Fix [#83](https://github.com/AresValley/Artemis/issues/83)
+
+### Changed
+
+- Completely overhauled the GUI for a more modern and fluid user experience.
+- Filters have been moved to the top menu for future implementation of new filtering functions
+- Minor chnages to the settings for logging and system-specific environement variables
 
 ### Fixed
 

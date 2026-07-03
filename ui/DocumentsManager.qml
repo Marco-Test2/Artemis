@@ -5,11 +5,14 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 import QtQuick.Dialogs
 
+
+import './components' as UIComponents
+
 Window {
     id: documentsManageranager
 
-    width: 800
-    height: 500
+    width: 820  
+    height: 520 
 
     Component.onCompleted: {
         x = Screen.width / 2 - width / 2
@@ -21,30 +24,33 @@ Window {
 
     title: qsTr("Artemis - Documents Manager")
 
+
     signal saveNewDoc (variant docParamLst)
     signal updateDoc (variant docParamLst)
     signal deleteDoc (string docId, string extension, string type, bool preview)
     signal openDoc (string docId, string extension)
 
 
+    property var currentDoc: null
+
     function loadList(dict) {
         clearAll()
-        for (var i = 0; i < dict.length; i++) {
-            myModel.append(dict[i])
-        }
-        itemChanged()
+        listView.populateList(dict)
     }
 
     function getModel() {
         var dictionaryList = []
-        for (var i = 0; i < myModel.count; i++) {
+        var list = listView.loadedList
+        if (!list) return dictionaryList
+
+        for (var i = 0; i < list.length; i++) {
             var dictionary = [
-                myModel.get(i).doc_id,
-                myModel.get(i).name,
-                myModel.get(i).description,
-                myModel.get(i).type,
-                myModel.get(i).preview,
-                myModel.get(i).extension
+                list[i].doc_id,
+                list[i].name,
+                list[i].description,
+                list[i].type,
+                list[i].preview,
+                list[i].extension
             ]
             dictionaryList.push(dictionary)
         }
@@ -52,28 +58,15 @@ Window {
     }
 
     function itemChanged() {
-        var selected_doc = myModel.get(listView.currentIndex)
-        if (selected_doc !== undefined) {
-
-            var docId = selected_doc.doc_id
-            var extension = selected_doc.extension
-            var name = selected_doc.name
-            var description = selected_doc.description
-            var type = selected_doc.type
-            var preview = selected_doc.preview
-
-            nameField.text = name
-            fileNameField.text = docId + '.' + extension
-            descriptionField.text = description
+        if (currentDoc !== undefined && currentDoc !== null) {
+            nameField.text = currentDoc.name ? currentDoc.name : ""
+            fileNameField.text = currentDoc.doc_id + '.' + currentDoc.extension
+            descriptionField.text = currentDoc.description ? currentDoc.description : ""
             lockMenu(false)
 
-            if (type === 'Image' || type === 'Audio') {
+            if (currentDoc.type === 'Image' || currentDoc.type === 'Audio') {
                 switchPreview.visible = true
-                if (preview === 1) {
-                    switchPreview.checked = true
-                } else {
-                    switchPreview.checked = false
-                }
+                switchPreview.checked = (currentDoc.preview === 1)
             } else {
                 switchPreview.visible = false
             }
@@ -99,35 +92,34 @@ Window {
         nameField.clear()
         fileNameField.clear()
         descriptionField.clear()
-        myModel.clear()
+        listView.clearList()
+        currentDoc = null
     }
 
     function previewChanged(is_preview) {
-        var previewItem = myModel.get(listView.currentIndex)
-        if (previewItem.preview !== is_preview) {
+        if (!currentDoc) return
+
+        if (currentDoc.preview !== is_preview) {
+            var list = listView.loadedList
             if (is_preview) {
-                for (var i = 0; i < myModel.count; i++) {
-                    if (myModel.get(i).type === previewItem.type) {
-                        myModel.get(i).preview = 0
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].type === currentDoc.type) {
+                        list[i].preview = 0
                     }
                 }
-                previewItem.preview = 1            
+                currentDoc.preview = 1            
             } else {
-                previewItem.preview = 0
+                currentDoc.preview = 0
             }
             updateDoc(getModel())
+            listView.populateList(list)
             itemChanged()
             changeSavedDialog.open()
         }
     }
 
     function validateFields() {
-        if (newPathField.text === '' || newNameField.text === '') {
-            // message file or name not selected
-            return false
-        } else {
-            return true
-        }
+        return (newPathField.text !== '' && newNameField.text !== '')
     }
 
     function setEditFileTypeComboBox(type) {
@@ -140,13 +132,13 @@ Window {
     }
 
     function editCurrentDoc(name, description, type) {
-        var selected_doc = myModel.get(listView.currentIndex)
+        if (!currentDoc) return
         var doc_param = [
-            selected_doc.doc_id,
+            currentDoc.doc_id,
             name,
             description,
             type,
-            selected_doc.preview,
+            currentDoc.preview,
         ]
         updateDoc([doc_param])
     }
@@ -163,7 +155,6 @@ Window {
 
         onAccepted: {
             newPathField.text = selectedFile
-
             if (selectedNameFilter.name === 'Image') {
                 newFileTypeComboBox.currentIndex = 0
             } else if (selectedNameFilter.name === 'Audio') {
@@ -182,41 +173,36 @@ Window {
         width: 400
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-
         modal: true
         closePolicy: Popup.NoAutoClose
-
         standardButtons: Dialog.Save | Dialog.Close
 
         ColumnLayout {
             anchors.fill: parent
+            spacing: 10
 
             RowLayout {
                 Layout.fillWidth: true
-                
+                spacing: 8
                 TextField {
                     id: newPathField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Path")
                     readOnly: true
                 }
-                
-                Button {
+                UIComponents.ArtemisButton {
                     text: qsTr("Browse")
-                    onClicked: {
-                        fileDialog.open()
-                    }
+                    onClicked: fileDialog.open()
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                
+                spacing: 8
                 ComboBox {
                     id: newFileTypeComboBox
                     model: ["Image", "Audio", "Document", "Other"]
                 }
-                
                 TextField {
                     id: newNameField
                     Layout.fillWidth: true
@@ -233,22 +219,18 @@ Window {
                     font.pointSize: 10
                     wrapMode: TextEdit.WordWrap
                 }
-                ScrollBar.vertical: ScrollBar {
-                    width: 10
-                }
+                ScrollBar.vertical: ScrollBar { width: 10 }
             }
         }
 
         onAccepted: {
             if (validateFields()) {
-                saveNewDoc(
-                    [
-                        newPathField.text,
-                        newNameField.text,
-                        newDescriptionField.text,
-                        newFileTypeComboBox.currentText
-                    ]
-                )
+                saveNewDoc([
+                    newPathField.text,
+                    newNameField.text,
+                    newDescriptionField.text,
+                    newFileTypeComboBox.currentText
+                ])
             }
         }
     }
@@ -259,23 +241,21 @@ Window {
         width: 400
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-
         modal: true
         closePolicy: Popup.NoAutoClose
-
         standardButtons: Dialog.Save | Dialog.Close
 
         ColumnLayout {
             anchors.fill: parent
+            spacing: 10
 
             RowLayout {
                 Layout.fillWidth: true
-                
+                spacing: 8
                 ComboBox {
                     id: editFileTypeComboBox
                     model: ["Image", "Audio", "Document", "Other"]
                 }
-                
                 TextField {
                     id: editNameField
                     Layout.fillWidth: true
@@ -292,9 +272,7 @@ Window {
                     font.pointSize: 10
                     wrapMode: TextEdit.WordWrap
                 }
-                ScrollBar.vertical: ScrollBar {
-                    width: 10
-                }
+                ScrollBar.vertical: ScrollBar { width: 10 }
             }
         }
 
@@ -313,16 +291,17 @@ Window {
         title: "Are you sure?"
         message: "You are about to delete the selected document. The process cannot be undone."
         messageType: "warn"
-
         standardButtons: Dialog.Cancel | Dialog.Yes
 
         onAccepted: {
-            deleteDoc(
-                myModel.get(listView.currentIndex).doc_id,
-                myModel.get(listView.currentIndex).extension,
-                myModel.get(listView.currentIndex).type,
-                myModel.get(listView.currentIndex).preview
-            )
+            if (currentDoc) {
+                deleteDoc(
+                    currentDoc.doc_id,
+                    currentDoc.extension,
+                    currentDoc.type,
+                    currentDoc.preview
+                )
+            }
         }
     }
 
@@ -336,101 +315,63 @@ Window {
     Page {
         anchors.fill: parent
 
-        RowLayout {
+        SplitView {
             anchors.fill: parent
-            anchors.rightMargin: 10
-            anchors.leftMargin: 10
-            anchors.bottomMargin: 10
-            spacing: 0
-            anchors.topMargin: 10
+            anchors.margins: 14
+            orientation: Qt.Horizontal
+
+            handle: Rectangle {
+                implicitWidth: 4
+                color: SplitHandle.pressed ? Qt.lighter(Material.accent, 1.0)
+                    : (SplitHandle.hovered ? Qt.lighter(Material.accent, 1.5) : "transparent")
+            }
 
             ColumnLayout {
-                Layout.minimumWidth: 150
-                RowLayout {
-                    Component {
-                        id: sectionHeading
-                        Rectangle {
-                            width: ListView.view.width
-                            height: 30
-                            color: "#00000000"
-                            Label {
-                                text: section
-                                font.capitalization: Font.AllUppercase
-                                font.bold: true
-                                font.pixelSize: 16
-                                color: Material.accent
-                                font.letterSpacing: 0.5
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                        }
-                    }
+                SplitView.fillWidth: false
+                SplitView.minimumWidth: 180
+                SplitView.preferredWidth: 240
+                spacing: 10
 
-                    ListView {
-                        id: listView
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        highlightMoveDuration: 0
-                        clip: true
-                        ScrollBar.vertical: bar
-                        highlight: Rectangle { color: Material.accent; radius: 5 }
-                        onCurrentIndexChanged: { itemChanged() }
-                        delegate: Item {
-                            id: listDelegate
-                            width: ListView.view.width
-                            height: 20
-                            Label { text: name }
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    listView.currentIndex = index
-                                }
-                            }
-                        }
+                UIComponents.ArtemisListView {
+                    id: listView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
 
-                        model: ListModel {
-                            id: myModel
-                        }
-                        
-                        section.property: "type"
-                        section.criteria: ViewSection.FullString
-                        section.delegate: sectionHeading
+                    onItemSelected: (itemObj) => {
+                        currentDoc = itemObj
+                        itemChanged()
                     }
-                    ScrollBar {
-                        id: bar
-                        Layout.fillHeight: true
-                        active: true
+                    onSelectionCleared: {
+                        currentDoc = null
+                        itemChanged()
                     }
                 }
 
-                Button {
+                UIComponents.ArtemisButton {
                     id: addButton
-                    text: qsTr("Add")
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    text: qsTr("Add New")
+                    type: "success"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
                     icon.source: "qrc:/data/images/icons/add.svg"
                     display: AbstractButton.TextBesideIcon
-                    onClicked: {
-                        dialogAddNew.open()
-                    }
+                    onClicked: dialogAddNew.open()
                 }
             }
 
-            ToolSeparator {
-                id: toolSeparator
-                rightPadding: 10
-                leftPadding: 10
-                Layout.fillHeight: true
-            }
-
             ColumnLayout {
-                Layout.preferredWidth: 300
+                SplitView.fillWidth: true
+                SplitView.minimumWidth: 340
+                spacing: 12 
 
                 Label {
                     text: qsTr("FILE DETAILS")
-                    font.letterSpacing: 0.5
+                    font.letterSpacing: 0.8
+                    font.bold: true
                     color: Material.accent
-                    font.pixelSize: 18
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    font.pixelSize: 14
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.bottomMargin: 4
                 }
 
                 TextField {
@@ -443,7 +384,7 @@ Window {
                 TextField {
                     id: fileNameField
                     Layout.fillWidth: true
-                    placeholderText: qsTr("File")
+                    placeholderText: qsTr("File Name")
                     readOnly: true
                 }
 
@@ -457,31 +398,28 @@ Window {
                         font.pointSize: 10
                         wrapMode: TextEdit.WordWrap
                     }
-                    ScrollBar.vertical: ScrollBar {
-                        width: 10
-                    }
+                    ScrollBar.vertical: ScrollBar { width: 10 }
                 }
 
                 RowLayout {
-                    Button {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    UIComponents.ArtemisButton {
                         id: deleteButton
                         text: qsTr("Delete")
+                        type: "danger"
                         icon.source: "qrc:/data/images/icons/delete.svg"
                         display: AbstractButton.TextBesideIcon
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        onClicked: {
-                            dialogDeleteConfirmation.open()
-                        }
+                        onClicked: dialogDeleteConfirmation.open()
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true } 
 
                     Switch {
                         id: switchPreview
                         text: qsTr("Main")
-
+                        Layout.alignment: Qt.AlignVCenter
                         onCheckedChanged: {
                             if (checked) {
                                 previewChanged(1)
@@ -491,33 +429,37 @@ Window {
                         }
                     }
 
-                    Button {
+                    UIComponents.ArtemisButton {
                         id: editButton
                         text: qsTr("Edit")
+                        type: "warning"
                         enabled: false
                         icon.source: "qrc:/data/images/icons/rename.svg"
                         display: AbstractButton.TextBesideIcon
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onClicked: {
-                            editNameField.text = myModel.get(listView.currentIndex).name
-                            setEditFileTypeComboBox(myModel.get(listView.currentIndex).type)
-                            editDescriptionField.text = myModel.get(listView.currentIndex).description
-                            dialogEdit.open()
+                            if (currentDoc) {
+                                editNameField.text = currentDoc.name ? currentDoc.name : ""
+                                setEditFileTypeComboBox(currentDoc.type)
+                                editDescriptionField.text = currentDoc.description ? currentDoc.description : ""
+                                dialogEdit.open()
+                            }
                         }
                     }
 
-                    Button {
+                    UIComponents.ArtemisButton {
                         id: openButton
                         text: qsTr("Open")
+                        type: "success"
                         enabled: false
                         icon.source: "qrc:/data/images/icons/open.svg"
                         display: AbstractButton.TextBesideIcon
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onClicked: {
-                            openDoc(
-                                myModel.get(listView.currentIndex).doc_id,
-                                myModel.get(listView.currentIndex).extension
-                            )
+                            if (currentDoc) {
+                                openDoc(
+                                    currentDoc.doc_id,
+                                    currentDoc.extension
+                                )
+                            }
                         }
                     }
                 }

@@ -5,26 +5,25 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 import QtQuick.Dialogs
 
+import './components' as UIComponents
+
 
 Window {
     id: window
     width: 1100
     height: 800
+    title: qsTr("Artemis")
+    visible: true
+    
+    modality: Qt.ApplicationModal
+    flags: Qt.Window
 
     Component.onCompleted: {
         x = Screen.width / 2 - width / 2
         y = Screen.height / 2 - height / 2
     }
 
-    title: qsTr("Artemis")
-    visible: true
-    
-    modality: Qt.ApplicationModal
-    flags: Qt.Window
-    
-    // Windows without upper bar
-    //flags: Qt.FramelessWindowHint
-
+    // MARK: Signals
     signal loadSignal(int signalId)
     signal showPref()
     signal showDBmanager()
@@ -38,74 +37,33 @@ Window {
     signal newDb(string name)
     signal exportDb(string path)
     signal importDb(string path)
+    signal applyFilter(var filterDict)
 
-    property var loadedList
+    // MARK: Properties
+    property var filterDict: ({})
     property bool updateAvailable: false
+    property var currentSelectedSignal: null
 
-    function populateList(signalsList) {
-        loadedList = signalsList
-        textFieldSearch.enabled = true
-        var currentIndex = listView.currentIndex
-        refreshList()
-        // Set the currentIndex back after refreshing the list
-        if (currentIndex >= 0 && currentIndex < listModel.count) {
-            listView.currentIndex = currentIndex
-        }
-    }
-
-    function refreshList() {
-        listModel.clear()
-        for (var i = 0; i < loadedList.length; i++) {
-            var name = loadedList[i].name.toLowerCase()
-            var description = loadedList[i].description.toLowerCase()
-            var search = textFieldSearch.text.toLowerCase()
-            if (name.includes(search) || description.includes(search)) {
-                listModel.append(loadedList[i])
-            }
-        }
-        itemChangedList()
-    }
-
-    function itemChangedList() {
-        var selected_sig = listModel.get(listView.currentIndex)
-        if (selected_sig !== undefined) {
-            loadSignal(listModel.get(listView.currentIndex).SIG_ID)
-            editSignalMenu.enabled = true
-        } else {
-            editSignalMenu.enabled = false
-        }
-    }
-
-    function clearList() {
-        listModel.clear()
-        loadedList = []
-        textFieldSearch.clear()
-        textFieldSearch.enabled = false
-    }
-
+    // MARK: Functions
     function lockMenu(toggle) {
-        if (toggle) {
-            openFileMenu.enabled = false
-            exportFileMenu.enabled = false
-            newSignalMenu.enabled = false
-            editCategoryMenu.enabled = false
-        } else {
-            openFileMenu.enabled = true
-            exportFileMenu.enabled = true
-            newSignalMenu.enabled = true
-            editCategoryMenu.enabled = true
-        }
+        openFileMenu.enabled = !toggle
+        exportFileMenu.enabled = !toggle
+        newSignalMenu.enabled = !toggle
+        editCategoryMenu.enabled = !toggle
+        newFrequencyMenu.enabled = !toggle
+        newBandMenu.enabled = !toggle
+        newModeMenu.enabled = !toggle
+        newModulationMenu.enabled = !toggle
+        newACFMenu.enabled = !toggle
+        newLocationMenu.enabled = !toggle
     }
 
     function bottomInfoBar(message, messageType) {
         bottomInfoLabel.text = message
-        switch (messageType) {
-        case "warning":
+        if (messageType === "warning") {
             bottomInfoLabel.color = Material.color(Material.Red)
-            break
-        case "info":
+        } else {
             bottomInfoLabel.color = Material.foreground
-            break
         }
     }
 
@@ -131,25 +89,154 @@ Window {
         dialogUpdateArtemis.open()
     }
 
+    function populateFilterLists(data) {
+        if (data && data.length > 0) {
+            if (data[0].location) filterLocation.populate(data[0].location);
+            if (data[0].category) filterCategory.populate(data[0].category);
+            if (data[0].modulation) filterModulation.populate(data[0].modulation);
+        }
+    }
+
+    function submitFilters() {
+        applyFilter(filterDict);
+    }
+
+    function resetFilters() {
+        filterLocation.resetToDefault();
+        filterCategory.resetToDefault();
+        filterModulation.resetToDefault();
+        filterFrequency.resetToDefault();
+        filterACF.resetToDefault();
+        filterBandwidth.resetToDefault();
+        applyFilter({});
+    }
+
+    function anyFilterActive() {
+        return filterLocation.isFilterActive || 
+            filterCategory.isFilterActive || 
+            filterModulation.isFilterActive ||
+            filterFrequency.isFilterActive ||
+            filterBandwidth.isFilterActive ||
+            filterACF.isFilterActive
+    }
+
+    // MARK: FILTERS
+    UIComponents.FilterRangeDialog {
+        id: filterFrequency
+        objectName: "frequencyDialogObj"
+        title: qsTr("Filter by Frequency")
+        field_label: qsTr("Frequency")
+
+        onFilterApplied: function(lowerBand, upperBand) {
+            if (isFilterActive && lowerBand !== null && upperBand !== null) {
+                filterDict["frequency"] = {
+                    lower_band: lowerBand,
+                    upper_band: upperBand
+                }
+            } else {
+                delete filterDict["frequency"]
+            }
+            submitFilters()
+        }
+    }
+
+    UIComponents.FilterRangeDialog {
+        id: filterBandwidth
+        objectName: "bandwidthDialogObj"
+        title: qsTr("Filter by Bandwidth")
+        field_label: qsTr("Bandwidth")
+
+        onFilterApplied: function(lowerBand, upperBand) {
+            if (isFilterActive && lowerBand !== null && upperBand !== null) {
+                filterDict["bandwidth"] = {
+                    lower_band: lowerBand,
+                    upper_band: upperBand
+                }
+            } else {
+                delete filterDict["bandwidth"]
+            }
+            submitFilters()
+        }
+    }
+
+    UIComponents.FilterRangeDialog {
+        id: filterACF
+        objectName: "acfDialogObj"
+        title: qsTr("Filter by ACF")
+        field_label: qsTr("ACF")
+        isTimeField: true
+
+        onFilterApplied: function(lowerBand, upperBand) {
+            if (isFilterActive && lowerBand !== null && upperBand !== null) {
+                filterDict["acf"] = {
+                    lower_band: lowerBand,
+                    upper_band: upperBand
+                }
+            } else {
+                delete filterDict["acf"]
+            }
+            submitFilters()
+        }
+    }
+
+    UIComponents.FilterListDialog {
+        id: filterLocation
+        objectName: "locationDialogObj"
+        title: qsTr("Filter by Location")
+        
+        onFilterApplied: function(selectedValues) {
+            if (isFilterActive && selectedValues && selectedValues.length > 0) {
+                filterDict["location"] = selectedValues;
+            } else {
+                delete filterDict["location"];
+            }
+            submitFilters();
+        }
+    }
+
+    UIComponents.FilterListDialog {
+        id: filterCategory
+        objectName: "categoryDialogObj"
+        title: qsTr("Filter by Category")
+        
+        onFilterApplied: function(selectedValues) {
+            if (isFilterActive && selectedValues && selectedValues.length > 0) {
+                filterDict["category"] = selectedValues;
+            } else {
+                delete filterDict["category"];
+            }
+            submitFilters();
+        }
+    }
+
+    UIComponents.FilterListDialog {
+        id: filterModulation
+        objectName: "modulationDialogObj"
+        title: qsTr("Filter by Modulation")
+        
+        onFilterApplied: function(selectedValues) {
+            if (isFilterActive && selectedValues && selectedValues.length > 0) {
+                filterDict["modulation"] = selectedValues;
+            } else {
+                delete filterDict["modulation"];
+            }
+            submitFilters();
+        }
+    }
+
+    // MARK: Dialogs
     DialogMessage {
         id: dialogDownloadDb
         modal: true
-
         standardButtons: Dialog.Cancel | Dialog.Yes
-
-        onAccepted: {
-            updateDb()
-        }
+        onAccepted: updateDb()
     }
 
     DialogMessage {
         id: dialogUpdateArtemis
         modal: true
-
         property bool autoUpdate
-
         standardButtons: Dialog.Cancel | Dialog.Yes
-
         onAccepted: {
             if (autoUpdate) {
                 updateArtemis();
@@ -162,26 +249,23 @@ Window {
     DialogMessage {
         id: dialogGeneral
         modal: true
-
         standardButtons: Dialog.Ok
     }
 
     Dialog {
         id: dialogNewDb
-
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-
         modal: true
         closePolicy: Popup.NoAutoClose
-
         standardButtons: Dialog.Ok | Dialog.Cancel
 
         ColumnLayout {
             anchors.fill: parent
+            spacing: 10
             Label {
                 text: qsTr("Enter the name of the new database:")
-                Layout.bottomMargin: 15
+                Layout.bottomMargin: 5
                 font.pointSize: 12
             }
             TextField {
@@ -190,31 +274,84 @@ Window {
                 placeholderText: qsTr("Name")
             }
         }
-
         onAccepted: {
             newDb(newDbName.text)
+            newDbName.clear()
         }
     }
 
+    // MARK: Export DB
     FileDialog {
         id: exportDialog
         title: "Please choose a save folder..."
         fileMode: FileDialog.SaveFile
         nameFilters: ["All files (*)"]
-
         onAccepted: {
-            exportDb(selectedFile)
+            operationPopup.message = "Exporting..."
+            operationPopup.open()
+            exportTimer.start()
         }
     }
 
+    Timer {
+        id: exportTimer
+        interval: 50
+        repeat: false
+        onTriggered: {
+            exportDb(exportDialog.selectedFile)
+            operationPopup.close()
+        }
+    }
+
+    // MARK: Import DB
     FileDialog {
         id: importDialog
         title: "Please choose a valid tar.gz archive..."
         fileMode: FileDialog.OpenFile
         nameFilters: ["All files (*)"]
-
         onAccepted: {
-            importDb(selectedFile)
+            operationPopup.message = "Importing..."
+            operationPopup.open()
+            importTimer.start()
+        }
+    }
+
+    Timer {
+        id: importTimer
+        interval: 50
+        repeat: false
+        onTriggered: {
+            importDb(importDialog.selectedFile)
+            operationPopup.close()
+        }
+    }
+
+    Popup {
+        id: operationPopup
+
+        property alias message: popupText.text
+
+        anchors.centerIn: parent
+        width: 200
+        height: 80
+        modal: true
+        focus: true
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            color: "#333333"
+            radius: 8
+            border.color: "#555555"
+            border.width: 1
+        }
+
+        Text {
+            id: popupText
+            text: ""
+            color: "white"
+            font.pointSize: 14
+            font.bold: true
+            anchors.centerIn: parent
         }
     }
 
@@ -222,11 +359,11 @@ Window {
         id: aboutDialog
     }
 
+    // MARK: Main UI Layout
     Page {
         anchors.fill: parent
         leftPadding: 10
         bottomPadding: 10
-
         focus: true
 
         Keys.onDownPressed: listView.incrementCurrentIndex()
@@ -234,129 +371,243 @@ Window {
 
         header: MenuBar {
             id: topBar
-
-            Menu {
-                title: qsTr("File")
-
-                MenuItem {
-                    text: "New Database..."
-                    onClicked: {dialogNewDb.open()}
+            background: Rectangle {
+                    color: Material.backgroundColor
                 }
 
-                MenuItem {
-                    text: "Load Database..."
-                    onClicked: {showDBmanager()}
-                }
+            delegate: MenuBarItem {
+                id: menuBarItem
+                contentItem: Label {
+                    text: menuBarItem.text
+                    font: menuBarItem.font
+                    color: (menuBarItem.menu === filterMenu && anyFilterActive()) ? Material.color(Material.Red) : Material.foreground
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
 
-                MenuSeparator {}
+                    SequentialAnimation on opacity {
+                        id: pulseAnimation
+                        running: menuBarItem.menu === filterMenu && anyFilterActive()
+                        loops: Animation.Infinite
 
-                MenuItem {
-                    id: importFileMenu
-                    text: "Import Database"
-                    onClicked: {importDialog.open()}
-                }
+                        NumberAnimation { to: 0.5; duration: 250; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 1.0; duration: 500; easing.type: Easing.InOutQuad }
 
-                MenuItem {
-                    id: exportFileMenu
-                    text: "Export Database"
-                    onClicked: {exportDialog.open()}
-                    enabled: false
-                }
-
-                MenuSeparator {}
-
-                MenuItem {
-                    id: editCategoryMenu
-                    text: "Edit Tags"
-                    onClicked: {showCatManager()}
-                    enabled: false
-                }
-
-                MenuSeparator {}
-
-                MenuItem {
-                    id: openFileMenu
-                    text: "Open Database Folder"
-                    onClicked: {openDbDirectory()}
-                    enabled: false
-                }
-
-                MenuItem {
-                    text: "Preferences"
-                    onClicked: {showPref()}
-                }
-
-                MenuItem {
-                    text: "Exit"
-                    onClicked: {window.close()}
-                }
-
-            }
-
-            Menu {
-                id: signalMenu
-                title: qsTr("Signal")
-
-                MenuItem {
-                    id: newSignalMenu
-                    enabled: false
-                    text: "New.."
-                    onClicked: {openSigEditor('Signal', [], true)}
-                }
-
-                MenuItem {
-                    id: editSignalMenu
-                    enabled: false
-                    text: "Edit..."
-                    onClicked: {openSigEditor('Signal', [], false)}
-                }
-            }
-
-            Menu {
-                title: qsTr("Space Weather")
-
-                MenuItem {
-                    text: "Check Report"
-                    onClicked: {
-                        showSpaceWeather()
+                        onRunningChanged: {
+                            if (!running)
+                                menuBarItem.contentItem.opacity = 1.0
+                        }
                     }
                 }
             }
 
             Menu {
+                title: qsTr("File")
+                MenuItem { text: "New Database..."; onClicked: dialogNewDb.open() }
+                MenuItem { text: "Load Database..."; onClicked: showDBmanager() }
+                MenuSeparator {}
+                MenuItem { id: importFileMenu; text: "Import Database"; onClicked: importDialog.open() }
+                MenuItem { id: exportFileMenu; text: "Export Database"; onClicked: exportDialog.open(); enabled: false }
+                MenuSeparator {}
+                MenuItem { id: editCategoryMenu; text: "Edit Tags"; onClicked: showCatManager(); enabled: false }
+                MenuSeparator {}
+                MenuItem { id: openFileMenu; text: "Open Database Folder"; onClicked: openDbDirectory(); enabled: false }
+                MenuItem { text: "Preferences"; onClicked: showPref() }
+                MenuItem { text: "Exit"; onClicked: close() }
+            }
+
+            Menu {
+                id: signalMenu
+                title: qsTr("Edit")
+
+                MenuItem {
+                    id: newSignalMenu
+                    enabled: false
+                    text: "New Signal"
+                    onClicked: openSigEditor('Signal', [], true)
+                }
+
+                MenuItem {
+                    id: editSignalMenu
+                    enabled: false
+                    text: "Edit Name/Description"
+                    onClicked: {
+                        if (currentSelectedSignal) {
+                            openSigEditor('Signal', currentSelectedSignal, false)
+                        }
+                    }
+                }
+
+                MenuSeparator {}
+
+                MenuItem {
+                    id: newFrequencyMenu
+                    enabled: false
+                    text: "Add Frequency"
+                    onClicked: openSigEditor('Frequency', [], true)
+                }
+
+                MenuItem {
+                    id: newBandMenu
+                    enabled: false
+                    text: "Add Bandwidth"
+                    onClicked: openSigEditor('Bandwidth', [], true)
+                }
+
+                MenuItem {
+                    id: newModulationMenu
+                    enabled: false
+                    text: "Add Modulation"
+                    onClicked: openSigEditor('Modulation', [], true)
+                }
+
+                MenuItem {
+                    id: newModeMenu
+                    enabled: false
+                    text: "Add Mode"
+                    onClicked: openSigEditor('Mode', [], true)
+                }
+
+                MenuItem {
+                    id: newACFMenu
+                    enabled: false
+                    text: "Add ACF"
+                    onClicked: openSigEditor('ACF', [], true)
+                }
+
+                MenuItem {
+                    id: newLocationMenu
+                    enabled: false
+                    text: "Add Location"
+                    onClicked: openSigEditor('Location', [], true)
+                }
+            }
+
+            Menu {
+                id: filterMenu
+                title: anyFilterActive() ? qsTr("Filter •") : qsTr("Filter")
+
+                MenuItem {
+                    text: qsTr("Frequency")
+                    onClicked: filterFrequency.open()
+
+                    contentItem: Label {
+                        text: filterFrequency.isFilterActive
+                            ? qsTr("Frequency •")
+                            : qsTr("Frequency")
+
+                        color: filterFrequency.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("Bandwidth")
+                    onClicked: filterBandwidth.open()
+
+                    contentItem: Label {
+                        text: filterBandwidth.isFilterActive
+                            ? qsTr("Bandwidth •")
+                            : qsTr("Bandwidth")
+
+                        color: filterBandwidth.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("ACF")
+                    onClicked: filterACF.open()
+
+                    contentItem: Label {
+                        text: filterACF.isFilterActive
+                            ? qsTr("ACF •")
+                            : qsTr("ACF")
+
+                        color: filterACF.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("Modulation")
+                    onClicked: filterModulation.open()
+
+                    contentItem: Label {
+                        text: filterModulation.isFilterActive
+                            ? qsTr("Modulation •")
+                            : qsTr("Modulation")
+
+                        color: filterModulation.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("Category")
+                    onClicked: filterCategory.open()
+
+                    contentItem: Label {
+                        text: filterCategory.isFilterActive
+                            ? qsTr("Category •")
+                            : qsTr("Category")
+
+                        color: filterCategory.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("Location")
+                    onClicked: filterLocation.open()
+
+                    contentItem: Label {
+                        text: filterLocation.isFilterActive
+                            ? qsTr("Location •")
+                            : qsTr("Location")
+
+                        color: filterLocation.isFilterActive
+                            ? Material.color(Material.Red)
+                            : Material.foreground
+                    }
+                }
+
+                MenuSeparator {}
+
+                MenuItem {
+                    id: resetFilterMenu
+                    enabled: true
+                    text: "Reset all filters"
+                    onClicked: {resetFilters()}
+                } 
+            }
+
+            Menu {
+                title: qsTr("Space Weather")
+                MenuItem { text: "Check Report"; onClicked: showSpaceWeather() }
+            }
+
+            Menu {
                 id: aboutMenu
-                title: window.updateAvailable ? qsTr("Help •") : qsTr("Help")
+                title: updateAvailable ? qsTr("Help •") : qsTr("Help")
 
                 MenuItem {
                     id: checkForUpdatesItem
-                    onClicked: { checkForUpdate() }
+                    onClicked: checkForUpdate()
+                    text: qsTr("Check for Updates")
 
-                    contentItem: RowLayout {
-                        spacing: 10
+                    contentItem: Label {
+                        text: updateAvailable
+                            ? qsTr("Check for Updates •")
+                            : qsTr("Check for Updates")
 
-                        Label {
-                            text: qsTr("Check for Updates")
-                            font: checkForUpdatesItem.font
-                            color: checkForUpdatesItem.enabled ? Material.foreground : Material.hintTextColor
-                            Layout.fillWidth: true
-                        }
-
-                        Rectangle {
-                            id: updateDot
-                            width: 8
-                            height: 8
-                            radius: 4
-                            color: Material.color(Material.Red)
-                            visible: window.updateAvailable // shows only if updates are available
-                            Layout.alignment: Qt.AlignVCenter
-
-                            SequentialAnimation on opacity {
-                                loops: Animation.Infinite
-                                running: window.updateAvailable
-                                NumberAnimation { from: 1.0; to: 0.4; duration: 250; easing.type: Easing.InOutQuad }
-                                NumberAnimation { from: 0.4; to: 1.0; duration: 500; easing.type: Easing.InOutQuad }
-                            }
-                        }
+                        color: updateAvailable
+                            ? Material.color(Material.Red)
+                            : Material.foreground
                     }
                 }
 
@@ -385,13 +636,7 @@ Window {
                 }
 
                 MenuSeparator {}
-
-                MenuItem {
-                    text: "About"
-                    onClicked: {
-                        aboutDialog.open()
-                    }
-                }
+                MenuItem { text: "About"; onClicked: aboutDialog.open() }
             }
         }
 
@@ -403,95 +648,60 @@ Window {
             bottomPadding: 5
         }
 
-        RowLayout {
+        SplitView {
+            id: mainSplitView
             anchors.fill: parent
-            spacing: 10
+            orientation: Qt.Horizontal
 
-            ColumnLayout {
-                Layout.maximumWidth: 250
+            handle: Rectangle {
+                implicitWidth: 4
+                color: SplitHandle.pressed ? Qt.lighter(Material.accent, 1.0)
+                    : (SplitHandle.hovered ? Qt.lighter(Material.accent, 1.5) : "transparent")
+            }
 
-                TextField {
-                    id: textFieldSearch
-                    Layout.preferredHeight: 39
-                    Layout.topMargin: 5
-                    enabled: false
-                    Layout.fillWidth: true
+            Item {
+                SplitView.preferredWidth: 250
+                SplitView.minimumWidth: 200
+                SplitView.maximumWidth: 450
 
-                    placeholderText: qsTr("Search")
-                    onTextChanged: {
-                        refreshList()
-                    }
-                }
+                UIComponents.ArtemisListView {
+                    id: customSignalList
+                    objectName: "signalListObj"
 
-                RowLayout {
+                    anchors.fill: parent
+                    anchors.rightMargin: 10
 
-                    ListView {
-                        id: listView
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        highlightMoveDuration: 0
-                        clip: true
-                        ScrollBar.vertical: bar
-                        highlight: Rectangle { color: Material.accent; radius: 5 }
-                        onCurrentIndexChanged: { itemChangedList() }
-                        delegate: Item {
-                            id: listDelegate
-                            width: ListView.view.width
-                            height: 20
-                            Label {text: name}
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: listView.currentIndex = index
-                            }
-                        }
-                        model: ListModel {
-                            id: listModel
-                        }
+                    onItemSelected: (selectedItem) => {
+                        currentSelectedSignal = selectedItem
+                        loadSignal(selectedItem.SIG_ID) 
+                        editSignalMenu.enabled = true
+                        newFrequencyMenu.enabled = true
+                        newBandMenu.enabled = true
+                        newModeMenu.enabled = true
+                        newModulationMenu.enabled = true
+                        newACFMenu.enabled = true
+                        newLocationMenu.enabled = true
                     }
 
-                    ScrollBar {
-                        id: bar
-                        Layout.fillHeight: true
-                        active: true
+                    onSelectionCleared: {
+                        currentSelectedSignal = null
+                        editSignalMenu.enabled = false
+                        newFrequencyMenu.enabled = false
+                        newBandMenu.enabled = false
+                        newModeMenu.enabled = false
+                        newModulationMenu.enabled = false
+                        newACFMenu.enabled = false
+                        newLocationMenu.enabled = false
                     }
                 }
             }
 
-            ColumnLayout {
-                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-
-                TabBar {
-                    id: tabBar
-                    Layout.fillWidth: true
-
-                    TabButton {
-                        text: qsTr("SIGNAL")
-                    }
-
-                    TabButton {
-                        text: qsTr("FILTERS")
-                    }
-                }
-
-                StackLayout {
-                    currentIndex: tabBar.currentIndex
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-
-                    Item {
-                        SignalPage {
-                            id: signalPage
-                        }
-                    }
-
-                    Item {
-                        FilterPage {
-                            id: filterPage
-                        }
-                    }
+            // MARK: Right panel
+            Item {
+                SplitView.fillWidth: true
+                SignalPage {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
                 }
             }
         }

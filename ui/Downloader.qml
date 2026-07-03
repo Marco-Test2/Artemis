@@ -4,6 +4,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import './components' as UIComponents
+
 
 Window {
     id: windowDownloader
@@ -52,7 +54,7 @@ Window {
             anchors.margins: 10
 
             Label {
-                text: qsTr("Downloading in progress...")
+                text: qsTr("Download in progress...")
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             }
 
@@ -71,12 +73,12 @@ Window {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             }
 
-            Button {
+            UIComponents.ArtemisButton {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                text: qsTr("Abort")
-                icon.source: "qrc:/data/images/icons/abort.svg"
+                text: qsTr("Cancel")
+                icon.source: "qrc:/data/images/icons/cancel.svg"
+                type: "danger"
                 display: AbstractButton.TextBesideIcon
-                flat: true
                 onClicked: { abortRequested() }
             }
         }

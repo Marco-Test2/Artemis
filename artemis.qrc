@@ -20,7 +20,7 @@
         <file>data/images/icons/open.svg</file>
         <file>data/images/icons/browser.svg</file>
         <file>data/images/icons/documents.svg</file>
-        <file>data/images/icons/abort.svg</file>
+        <file>data/images/icons/cancel.svg</file>
         <file>data/images/icons/settings.svg</file>
         <file>data/images/spectrum_not_available.svg</file>
         <file>data/images/artemis_not_available.svg</file>
@@ -35,7 +35,6 @@
         <file>ui/SignalEditor.qml</file>
         <file>ui/CategoryEditor.qml</file>
 
-        <file>ui/FilterPage.qml</file>
         <file>ui/SignalPage.qml</file>
         <file>ui/SpaceWeatherCurrentPage.qml</file>
         <file>ui/SpaceWeatherForecastPage.qml</file>
@@ -50,5 +49,9 @@
         <file>ui/components/AIndexLight.qml</file>
         <file>ui/components/AudioPlayer.qml</file>
         <file>ui/components/BandBar.qml</file>
+        <file>ui/components/FilterListDialog.qml</file>
+        <file>ui/components/FilterRangeDialog.qml</file>
+        <file>ui/components/ArtemisButton.qml</file>
+        <file>ui/components/ArtemisListView.qml</file>
     </qresource>
 </RCC>

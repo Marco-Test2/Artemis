@@ -4,6 +4,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import './components' as UIComponents
+
 
 Window {
     id: windowSignalEditor
@@ -173,13 +175,13 @@ Window {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 Layout.fillWidth: true
 
-                Button {
+                UIComponents.ArtemisButton {
                     id: deleteButton
-                    visible: isNew ? false : true
                     text: qsTr("Delete")
+                    visible: isNew ? false : true
+                    type: "danger"
                     icon.source: "qrc:/data/images/icons/delete.svg"
                     display: AbstractButton.TextBesideIcon
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                     onClicked: {
                         dialogDeleteConfirmation.open()
                     }
@@ -189,12 +191,12 @@ Window {
                     Layout.fillWidth: true
                 }
 
-                Button {
+                UIComponents.ArtemisButton {
                     id: saveButton
                     text: qsTr("Save")
+                    type: "success"
                     icon.source: "qrc:/data/images/icons/save.svg"
                     display: AbstractButton.TextBesideIcon
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                     onClicked: {
                         save()
                     }
