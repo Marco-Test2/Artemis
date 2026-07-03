@@ -7,7 +7,7 @@
     <name>AresValley</name>
   </developer>
   
-  <summary>Radio Signals Recognition Manual</summary>
+  <summary>The reference for radio signal identification</summary>
   
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
@@ -81,6 +81,22 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="4.1.5" date="2026-07-03">
+      <url type="details">https://github.com/AresValley/Artemis/releases/tag/v4.1.5</url>
+      <description>
+        <p>This release introduces native support for Arch Linux, a completely overhauled GUI for a more modern experience, and important bug fixes for the download module and database updates.</p>
+        <ul>
+          <li>Added indicator if a DB and/or Artemis update is available on the main menu</li>
+          <li>Added native support and official packages for Arch Linux and derived distributions utilizing the pacman package manager</li>
+          <li>Added official support and binaries (.pkg.tar.zst) for x64 arch-based distros along rpm and deb packages (#83)</li>
+          <li>Completely overhauled the GUI for a more modern and fluid user experience</li>
+          <li>Filters have been moved to the top menu for future implementation of new filtering functions</li>
+          <li>Minor changes to the settings for logging and system-specific environment variables</li>
+          <li>Download module has been refactored to mitigate bugs on edge cases</li>
+          <li>Resolved an issue where database updates were blocked if the application was not running the latest version (#76)</li>
+        </ul>
+      </description>
+    </release>
     <release version="4.1.1" date="2026-06-27">
       <url type="details">https://github.com/AresValley/Artemis/releases/tag/v4.1.1</url>
       <description>

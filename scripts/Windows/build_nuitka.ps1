@@ -1,4 +1,4 @@
-$VERSION = "4.1.1"
+$VERSION = "4.1.5"
 
 Write-Output "Building Windows target"
 

@@ -26,6 +26,6 @@ uv run --python 3.13 nuitka \
   --macos-app-name=Artemis \
   --macos-app-mode=gui \
   --macos-sign-identity=auto \
-  --macos-app-version=4.1.1
+  --macos-app-version=4.1.5
 
 echo "Building macOS target finished."

@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [4.1.5] - 2026-07-03
+
 ### Added
 
 - Added indicator if a DB and/or Artemis update is available on the main menu
