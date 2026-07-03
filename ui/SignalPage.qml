@@ -121,37 +121,6 @@ Page {
         }
     }
 
-    Dialog {
-        id: dialogAddCategory
-
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-
-        modal: true
-        closePolicy: Popup.CloseOnPressOutside
-
-        ColumnLayout {
-            anchors.fill: parent
-
-            Repeater {
-                model: allCategoryList
-                delegate: Button {
-                    text: modelData.value
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 25
-                    highlighted: true
-                    bottomInset: 3
-                    topInset: 3
-                    flat: false
-                    onClicked: {
-                        addCatTag(modelData.clb_id)
-                        dialogAddCategory.close()
-                    }
-                }
-            }
-        }
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.rightMargin: 10
@@ -196,7 +165,24 @@ Page {
                 visibleBackground: true
                 text: '+'
                 onClicked: {
-                    dialogAddCategory.open()
+                    categoryMenu.open()
+                }
+                Menu {
+                    id: categoryMenu
+                    y: addTagButton.height
+                    height:300
+
+                    Instantiator {
+                        model: allCategoryList
+
+                        delegate: MenuItem {
+                            text: modelData.value
+                            onTriggered: {addCatTag(modelData.clb_id)}
+                        }
+
+                        onObjectAdded: (index, object) => categoryMenu.insertItem(index, object)
+                        onObjectRemoved: (index, object) => categoryMenu.removeItem(object)
+                    }
                 }
             }
         }
