@@ -24,7 +24,7 @@ Window {
 
     title: qsTr("Artemis - Documents Manager")
 
-  
+
     signal saveNewDoc (variant docParamLst)
     signal updateDoc (variant docParamLst)
     signal deleteDoc (string docId, string extension, string type, bool preview)
@@ -315,15 +315,21 @@ Window {
     Page {
         anchors.fill: parent
 
-        RowLayout {
+        SplitView {
             anchors.fill: parent
-            anchors.margins: 14 
-            spacing: 12 
+            anchors.margins: 14
+            orientation: Qt.Horizontal
+
+            handle: Rectangle {
+                implicitWidth: 4
+                color: SplitHandle.pressed ? Qt.lighter(Material.accent, 1.0)
+                    : (SplitHandle.hovered ? Qt.lighter(Material.accent, 1.5) : "transparent")
+            }
 
             ColumnLayout {
-                Layout.fillHeight: true
-                Layout.minimumWidth: 180
-                Layout.preferredWidth: 240
+                SplitView.fillWidth: false
+                SplitView.minimumWidth: 180
+                SplitView.preferredWidth: 240
                 spacing: 10
 
                 UIComponents.ArtemisListView {
@@ -353,17 +359,9 @@ Window {
                 }
             }
 
-            ToolSeparator {
-                id: toolSeparator
-                Layout.fillHeight: true
-                leftPadding: 4
-                rightPadding: 4
-            }
-
             ColumnLayout {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                Layout.preferredWidth: 340
+                SplitView.fillWidth: true
+                SplitView.minimumWidth: 340
                 spacing: 12 
 
                 Label {
