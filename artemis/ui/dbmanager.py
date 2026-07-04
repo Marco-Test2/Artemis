@@ -4,8 +4,8 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject, Signal, Slot
 
 from artemis.utils.path_utils import DATA_DIR
-from artemis.utils.generic_utils import *
-from artemis.utils.sql_utils import ArtemisDatabase
+from artemis.utils.generic_utils import parse_date
+from artemis.utils.sql_utils import ArtemisDB
 from artemis.utils.sys_utils import delete_dir
 
 
@@ -58,10 +58,10 @@ class UIdbmanager(QObject):
                     'version': db.version,
                     'date': parse_date(db.date),
                     'db_dir_name': db.db_dir_name,
-                    'documents_n': db.stats['documents'],
-                    'signals_n': db.stats['signals'],
-                    'images_n': db.stats['images'],
-                    'audio_n': db.stats['audio']
+                    'documents_n': db.count_docs,
+                    'signals_n': db.count_signals,
+                    'images_n': db.count_images,
+                    'audio_n': db.count_audio
                 }
             )
 
@@ -93,7 +93,7 @@ class UIdbmanager(QObject):
     def rename_db(self, db_dir_name, new_name):
         """ Rename db in the data folder
         """
-        database = ArtemisDatabase(db_dir_name)
+        database = ArtemisDB(db_dir_name)
         database.rename(new_name)
         self.load_local_db_list()
 
@@ -108,10 +108,9 @@ class UIdbmanager(QObject):
 
         for db_dir_name in db_dirs:
             try:
-                database = ArtemisDatabase(db_dir_name)
-                database.load()
+                database = ArtemisDB(db_dir_name, apply_migrations=True)
                 valid_db_list.append(database)
-            except:
+            except Exception:
                 continue
 
         return valid_db_list

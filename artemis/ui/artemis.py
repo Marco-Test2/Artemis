@@ -5,7 +5,7 @@ from PySide6.QtCore import QObject, Slot, Signal, QUrl
 
 from artemis.utils.constants import Constants, Messages
 from artemis.utils.sys_utils import open_directory, make_tar, unpack_tar
-from artemis.utils.sql_utils import ArtemisDatabase, ArtemisSignal
+from artemis.utils.sql_utils import ArtemisDB, ArtemisSIG
 from artemis.utils.update_utils import UpdateManager
 from artemis.utils.path_utils import normalize_dialog_path
 from artemis.utils.path_utils import DATA_DIR
@@ -52,9 +52,10 @@ class UIArtemis(QObject):
         self._window = self._engine.rootObjects()[0]
 
         self._window_signal = self._window.findChild(QObject, "signalPageObj")
-        self._window_signal_list = self._window.findChild(QObject, "signalListObj") # <--- MODIFICATO (Nuovo riferimento)
+        self._window_signal_list = self._window.findChild(QObject, "signalListObj")
 
         self.loaded_db = None
+        self.loaded_sig = None
 
         self._connect()
 
@@ -118,8 +119,8 @@ class UIArtemis(QObject):
             db_dir_name (str): folder name in the data folder
         """
         # Loading DB
-        self.loaded_db = ArtemisDatabase(db_dir_name)
-        self.loaded_db.load()
+        self.loaded_db = ArtemisDB(db_dir_name)
+
         # Clearing UI
         self.lock_menu.emit(False)
         self.clear_signal_page.emit()
@@ -127,8 +128,7 @@ class UIArtemis(QObject):
         self.filters_manager.load_filter_lists()
         self.populate_sig_list.emit(self.loaded_db.all_signals)
         # Updating status bar
-        total_signals = len(self.loaded_db.all_signals)
-        self.bottom_info_bar("Database loaded with {} signals".format(total_signals), "info")
+        self.bottom_info_bar(f"Database loaded with {self.loaded_db.count_signals} signals", "info")
 
 
     @Slot(int)
@@ -138,11 +138,10 @@ class UIArtemis(QObject):
         Args:
             sig_id (int): SIG_ID of the signal to be loaded 
         """
-        self.loaded_sig = ArtemisSignal(self.loaded_db)
+        self.loaded_sig = ArtemisSIG(self.loaded_db)
         self.loaded_sig.load(sig_id)
-        sig_dic = self.loaded_sig.generate_dic()
 
-        self.populate_sig_details.emit([sig_dic])
+        self.populate_sig_details.emit([self.loaded_sig.summary])
 
 
     def show_pref_ui(self):
@@ -229,7 +228,7 @@ class UIArtemis(QObject):
             name (str): name of the new DB, hardcoded in sql info table
         """
         try:
-            new_db = ArtemisDatabase(str(uuid.uuid4()))
+            new_db = ArtemisDB(str(uuid.uuid4()))
             new_db.create(name)
             self.load_db(new_db.db_dir_name)
             self.dialog_popup(

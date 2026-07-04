@@ -143,7 +143,7 @@ Page {
             Repeater {
                 model: categoryList
                 delegate: UIComponents.ArtemisButton {
-                    text: modelData[1]
+                    text: modelData[2]
                     Layout.preferredHeight: 30
                     visibleBackground: true
 
