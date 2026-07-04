@@ -366,8 +366,8 @@ Window {
         bottomPadding: 10
         focus: true
 
-        Keys.onDownPressed: listView.incrementCurrentIndex()
-        Keys.onUpPressed: listView.decrementCurrentIndex()
+        Keys.onDownPressed: customSignalList.incrementCurrentIndex()
+        Keys.onUpPressed: customSignalList.decrementCurrentIndex()
 
         header: MenuBar {
             id: topBar
@@ -673,7 +673,7 @@ Window {
 
                     onItemSelected: (selectedItem) => {
                         currentSelectedSignal = selectedItem
-                        loadSignal(selectedItem.SIG_ID) 
+                        loadSignal(selectedItem.sig_id) 
                         editSignalMenu.enabled = true
                         newFrequencyMenu.enabled = true
                         newBandMenu.enabled = true
