@@ -51,6 +51,8 @@ Page {
 
         if (freq_lo !== undefined) {
             bandBar.set(freq_lo[1], freq_up[1])
+        } else {
+            bandBar.reset()
         }
 
         if (sig.url !== undefined) {
