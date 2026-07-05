@@ -85,6 +85,9 @@ class UIdbmanager(QObject):
                 self._parent.lock_menu.emit(True)
                 self._parent.clear_list.emit()
                 self._parent.clear_signal_page.emit()
+                self._parent.loaded_db = None
+                self._parent.loaded_sig = None
+
         delete_dir(DATA_DIR / db_dir_name)
         self.load_local_db_list()
 
@@ -108,7 +111,10 @@ class UIdbmanager(QObject):
 
         for db_dir_name in db_dirs:
             try:
-                database = ArtemisDB(db_dir_name, apply_migrations=True)
+                database = ArtemisDB(db_dir_name)
+                database.migrate_db()
+                database.load_info()
+                database.load_stats()
                 valid_db_list.append(database)
             except Exception:
                 continue

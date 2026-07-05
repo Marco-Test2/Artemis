@@ -17,7 +17,7 @@ from playhouse.migrate import SqliteMigrator, migrate
 
 ################################## MARK: ==== DATABASE ====
 class ArtemisDB:
-    def __init__(self, db_dir_name, apply_migrations=False):
+    def __init__(self, db_dir_name):
         self.db_dir_name = db_dir_name
         self.db_dir = DATA_DIR / db_dir_name
         self.sql_path = self.db_dir / Constants.SQL_NAME
@@ -33,17 +33,14 @@ class ArtemisDB:
         self.all_locations = []
         self.all_category_labels = []
 
-        db_original = SqliteDatabase(self.sql_path)
-        database.initialize(db_original)
+        self.count_signals = None
+        self.count_docs = None
+        self.count_images = None
+        self.count_audio = None
 
-        # If DB exixts -> apply migrations (if required, not default) and load
-        # if DB does not exist -> does nothing. Wait for calling create method
-        if self.sql_path.exists():
-            with database:
-                if apply_migrations:
-                    self.migrate_db()
 
-                self.load()
+        db = SqliteDatabase(self.sql_path, autoconnect=False)
+        database.initialize(db)
 
 
     def load(self):
@@ -51,14 +48,15 @@ class ArtemisDB:
             signals list, all the categories-locations-modulations (used to populate
             the filters combobox) 
         """
-        self._load_info()
+        self.load_info()
+        self.load_stats()
         self._select_all_signals()
         self._select_all_category_labels()
         self._select_all_locations()
         self._select_all_modulations()
 
 
-    def _load_info(self):
+    def load_info(self):
         """ Load the DB meta INFO from the table 'info'
         """
         try:
@@ -70,6 +68,14 @@ class ArtemisDB:
                 self.editable = info_record.editable
         except Exception as e:
             print(f"ERROR: {e}")
+
+
+    def load_stats(self):
+        
+            self.count_signals = Signals.select().count()
+            self.count_docs = Documents.select().count()
+            self.count_images = Documents.select().where(Documents.type == 'Image').count()
+            self.count_audio = Documents.select().where(Documents.type == 'Audio').count()
 
 
     def _select_all_signals(self):
@@ -149,69 +155,39 @@ class ArtemisDB:
         os.makedirs(self.db_dir, exist_ok=True)
         os.makedirs(self.media_dir, exist_ok=True)
 
-        with database:
-            database.create_tables([
-                Info, Signals, Acf, Bandwidth, CategoryLabel, 
-                Category, Documents, Frequency, Location, Mode, Modulation
-            ])
+        database.create_tables([
+            Info, Signals, Acf, Bandwidth, CategoryLabel, 
+            Category, Documents, Frequency, Location, Mode, Modulation
+        ])
 
-            Info.create(
-                name=name,
-                date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                version=1,
-                editable=1
-            )
+        Info.create(
+            name=name,
+            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            version=1,
+            editable=1
+        )
 
         self.load()
 
-################################## MARK: STATS
-    @property
-    def count_signals(self):
-        with database:
-            return Signals.select().count()
-
-
-    @property
-    def count_docs(self):
-        with database:
-            return Documents.select().count()
-
-
-    @property
-    def count_images(self):
-        with database:
-            return Documents.select().where(Documents.type == 'Image').count()
-
-
-    @property
-    def count_audio(self):
-        with database:
-            return Documents.select().where(Documents.type == 'Audio').count()
-
 ################################## MARK: CRUD
     def rename(self, new_name):
-        with database:
-            Info.update(name=new_name).execute()
+        Info.update(name=new_name).execute()
         self.name = new_name
     
     def delete_signal(self, sig_id):
-        with database:
-            Signals.delete().where(Signals.sig_id == sig_id).execute()
+        Signals.delete().where(Signals.sig_id == sig_id).execute()
         self._select_all_signals()
 
     def insert_category_label(self, value):
-        with database:
-            CategoryLabel.create(value=value)
+        CategoryLabel.create(value=value)
         self._select_all_category_labels()
 
     def update_category_label(self, clb_id, value):
-        with database:
-            CategoryLabel.update(value=value).where(CategoryLabel.clb_id == clb_id).execute()
+        CategoryLabel.update(value=value).where(CategoryLabel.clb_id == clb_id).execute()
         self._select_all_category_labels()
 
     def delete_category_label(self, clb_id):
-        with database:
-            CategoryLabel.delete().where(CategoryLabel.clb_id == clb_id).execute()
+        CategoryLabel.delete().where(CategoryLabel.clb_id == clb_id).execute()
         self._select_all_category_labels()
 
 ################################## MARK: ==== SIGNAL ====

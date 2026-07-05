@@ -120,6 +120,7 @@ class UIArtemis(QObject):
         """
         # Loading DB
         self.loaded_db = ArtemisDB(db_dir_name)
+        self.loaded_db.load()
 
         # Clearing UI
         self.lock_menu.emit(False)
