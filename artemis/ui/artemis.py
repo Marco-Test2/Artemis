@@ -20,8 +20,6 @@ from artemis.ui.documentsmanager import UIdocumentsmanager
 from artemis.ui.categoryeditor import UIcategoryeditor
 from artemis.ui.filters import FiltersManager
 
-import artemis.resources
-
 
 class UIArtemis(QObject):
     # Python > QML Signals
