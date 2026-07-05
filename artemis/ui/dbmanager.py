@@ -13,7 +13,7 @@ class UIdbmanager(QObject):
     # Python > QML Signals
     show_ui = Signal()
     close_ui = Signal()
-    populate_db_list = Signal(list)
+    populate_db_list = Signal(list, str)
 
 
     def __init__(self, parent):
@@ -47,9 +47,12 @@ class UIdbmanager(QObject):
 
     def load_local_db_list(self):
         """ Scan for all the valid DBs in the data folder and show them on the list
+            Send to the qml also the loaded DB name, if exist. This is usefull to
+            render the badge 'LOADED' when a DB is selected from the list
         """
         db_param = []
         valid_db_list = self.scan_db_dir()
+        dir_name_loaded_db = self._parent.loaded_db.db_dir_name if self._parent.loaded_db is not None else ""
 
         for db in valid_db_list:
             db_param.append(
@@ -65,7 +68,7 @@ class UIdbmanager(QObject):
                 }
             )
 
-        self.populate_db_list.emit(db_param)
+        self.populate_db_list.emit(db_param, dir_name_loaded_db)
 
 
     def load_db(self, db_dir_name):
