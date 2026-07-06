@@ -49,6 +49,13 @@ Page {
 
         descriptionTextArea.text = sig.description
 
+        if (sig.since_version !== undefined) {
+            signalSinceVersionText.text = "v" + sig.since_version
+            signalSinceVersionBadge.visible = true
+        } else {
+            signalSinceVersionBadge.visible = false
+        }
+
         if (freq_lo !== undefined) {
             bandBar.set(freq_lo[1], freq_up[1])
         } else {
@@ -111,8 +118,14 @@ Page {
         audioPlayer.resetPlayer()
         image.source = "qrc:///data/images/spectrum_not_available.svg"
         bandBar.reset()
+        signalSinceVersionBadge.visible = false
         docManagerButton.visible = false
         addTagButton.enabled = false
+    }
+
+    function contrastTextColor(color) {
+        let luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b
+        return luminance > 0.55 ? "black" : "white"
     }
 
     ColumnLayout {
@@ -178,6 +191,27 @@ Page {
                         onObjectRemoved: (index, object) => categoryMenu.removeItem(object)
                     }
                 }
+            }
+        }
+
+        Rectangle {
+            id: signalSinceVersionBadge
+            color: Qt.alpha(Material.accent, 0.7)
+            radius: 4
+            implicitWidth: signalSinceVersionText.implicitWidth + 12
+            implicitHeight: signalSinceVersionText.implicitHeight + 4
+            visible: false
+            Layout.alignment: Qt.AlignHCenter
+            
+            Text {
+                id: signalSinceVersionText
+                text: ""
+                color: contrastTextColor(Material.accent)
+                font.pointSize: 9
+                anchors.centerIn: parent
+                ToolTip.visible: hoverHandler.hovered
+                ToolTip.text: qsTr("Signal introduced in database version %1").arg(text)
+                HoverHandler {id: hoverHandler}
             }
         }
 

@@ -27,11 +27,13 @@ class ArtemisDB:
         self.date = None
         self.version = None
         self.editable = None
+        self.is_sigid = None
 
         self.all_signals = []
         self.all_modulations = []
         self.all_locations = []
         self.all_category_labels = []
+        self.all_since_versions = []
 
         self.count_signals = None
         self.count_docs = None
@@ -54,6 +56,7 @@ class ArtemisDB:
         self._select_all_category_labels()
         self._select_all_locations()
         self._select_all_modulations()
+        self._select_all_since_versions()
 
 
     def load_info(self):
@@ -67,6 +70,7 @@ class ArtemisDB:
                     self.date = info_record.date
                     self.version = info_record.version
                     self.editable = info_record.editable
+                    self.is_sigid = True if self.editable == -1 else False
             except Exception as e:
                 print(f"ERROR: {e}")
 
@@ -127,6 +131,22 @@ class ArtemisDB:
             except Exception as e:
                 print(f"ERROR: {e}")
                 self.all_category_labels = []
+
+
+    def _select_all_since_versions(self):
+        with database:
+            try:
+                query = (
+                    Signals.select(Signals.since_version)
+                    .where(Signals.since_version
+                    .is_null(False))
+                    .distinct()
+                    .scalars()
+                )
+                self.all_since_versions = list(query)
+            except Exception as e:
+                print(f"ERROR: {e}")
+                self.all_since_versions = []
 
 ################################## MARK: MIGRATIONS
     def migrate_db(self):
@@ -221,6 +241,7 @@ class ArtemisSIG():
         self.mode = None
         self.location = None
         self.acf = None
+        self.since_version = None
         
         self.documents = None
         self.spectrum_path = None
@@ -250,6 +271,7 @@ class ArtemisSIG():
             'name': self.name,
             'description': self.description,
             'url': self.url,
+            'since_version': self.since_version,
             'category': self.category,
             'frequency': self.frequency,
             'bandwidth': self.bandwidth,
@@ -268,6 +290,7 @@ class ArtemisSIG():
             self.name = self._signal.name
             self.description = self._signal.description
             self.url = self._signal.url
+            self.since_version = self._signal.since_version
 
 
     def _select_category(self):

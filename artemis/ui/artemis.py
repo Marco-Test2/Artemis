@@ -30,7 +30,7 @@ class UIArtemis(QObject):
     clear_list = Signal()
     clear_signal_page = Signal()
     lock_audio_player = Signal()
-    lock_menu = Signal(bool)
+    lock_menu = Signal(bool, bool)
 
     show_dialog_popup = Signal(str, str, str)
     show_dialog_download_db = Signal(str, str, str)
@@ -119,9 +119,8 @@ class UIArtemis(QObject):
         # Loading DB
         self.loaded_db = ArtemisDB(db_dir_name)
         self.loaded_db.load()
-
         # Clearing UI
-        self.lock_menu.emit(False)
+        self.lock_menu.emit(False, self.loaded_db.is_sigid)
         self.clear_signal_page.emit()
         # Populating UI
         self.filters_manager.load_filter_lists()

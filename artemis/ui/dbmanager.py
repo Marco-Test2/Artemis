@@ -85,7 +85,7 @@ class UIdbmanager(QObject):
         """
         if self._parent.loaded_db is not None:
             if self._parent.loaded_db.db_dir_name == db_dir_name:
-                self._parent.lock_menu.emit(True)
+                self._parent.lock_menu.emit(True, False)
                 self._parent.clear_list.emit()
                 self._parent.clear_signal_page.emit()
                 self._parent.loaded_db = None
@@ -130,7 +130,7 @@ class UIdbmanager(QObject):
             Returns None if no valid sigID database is found.
         """
         valid_dbs = self._parent.dbmanager.scan_db_dir()
-        sig_id_dbs = [db for db in valid_dbs if db.editable == -1]
+        sig_id_dbs = [db for db in valid_dbs if db.is_sigid]
 
         if len(sig_id_dbs) != 0:
             sig_id_latest = max(sig_id_dbs, key=lambda x: x.version)

@@ -3,7 +3,7 @@ from PySide6.QtCore import QObject, Slot, Signal
 from peewee import ModelSelect
 
 from artemis.model import (
-    Signals, Category, CategoryLabel, Frequency, Bandwidth, 
+    database, Signals, Category, CategoryLabel, Frequency, Bandwidth, 
     Modulation, Location, Acf
 )
 
@@ -36,11 +36,13 @@ class FiltersManager(QObject):
         locations = self._parent.loaded_db.all_locations
         modulations = self._parent.loaded_db.all_modulations
         categories = self._parent.loaded_db.all_category_labels
+        since_versions = self._parent.loaded_db.all_since_versions
 
         self.populate_filter_list.emit([{
             'location': locations,
             'modulation': modulations,
-            'category': categories
+            'category': categories,
+            'since_version': since_versions
         }])
 
 
@@ -63,8 +65,7 @@ class FiltersManager(QObject):
                 return
 
             try:
-                signals_query = self._get_filtered_signals_query(filter_status)
-                filtered_signals = list(signals_query)
+                filtered_signals = self._get_filtered_signals_query(filter_status)
 
                 self._parent.loaded_db.all_signals = filtered_signals
 
@@ -84,52 +85,58 @@ class FiltersManager(QObject):
     def _get_filtered_signals_query(self, filter_status: dict) -> ModelSelect:
         """ Generete query using the applied filters summarized in the dictionary
         """
-        query = (Signals.select(Signals.sig_id, Signals.name, Signals.description))
+        with database:
+            query = (Signals.select(Signals.sig_id, Signals.name, Signals.description))
 
-        conditions = []
-        joined_models = set()
+            conditions = []
+            joined_models = set()
 
-        def apply_join(model):
-            nonlocal query
-            # Check if the model has not been joined yet to avoid redundant joins
-            if model not in joined_models:
-                query = query.switch(Signals).join(model)
-                # Mark the model as joined by adding it to the set
-                joined_models.add(model)
+            def apply_join(model):
+                nonlocal query
+                # Check if the model has not been joined yet to avoid redundant joins
+                if model not in joined_models:
+                    query = query.switch(Signals).join(model)
+                    # Mark the model as joined by adding it to the set
+                    joined_models.add(model)
 
-        # Iterate through each filter key and value provided in the dictionary
-        for key, val in filter_status.items():
-            if not val:
-                continue
+            # Iterate through each filter key and value provided in the dictionary
+            for key, val in filter_status.items():
+                if not val:
+                    continue
 
-            if key == 'frequency':
-                apply_join(Frequency)
-                conditions.append(Frequency.value.between(val['lower_band'], val['upper_band']))
+                if key == 'frequency':
+                    apply_join(Frequency)
+                    conditions.append(Frequency.value.between(val['lower_band'], val['upper_band']))
 
-            elif key == 'bandwidth':
-                apply_join(Bandwidth)
-                conditions.append(Bandwidth.value.between(val['lower_band'], val['upper_band']))
+                elif key == 'bandwidth':
+                    apply_join(Bandwidth)
+                    conditions.append(Bandwidth.value.between(val['lower_band'], val['upper_band']))
 
-            elif key == 'acf':
-                apply_join(Acf)
-                conditions.append(Acf.value.between(val['lower_band'], val['upper_band']))
+                elif key == 'acf':
+                    apply_join(Acf)
+                    conditions.append(Acf.value.between(val['lower_band'], val['upper_band']))
 
-            elif key == 'modulation':
-                apply_join(Modulation)
-                conditions.append(Modulation.value.in_(val))
+                elif key == 'modulation':
+                    apply_join(Modulation)
+                    conditions.append(Modulation.value.in_(val))
 
-            elif key == 'location':
-                apply_join(Location)
-                conditions.append(Location.value.in_(val))
+                elif key == 'location':
+                    apply_join(Location)
+                    conditions.append(Location.value.in_(val))
 
-            elif key == 'category':
-                if Category not in joined_models:
-                    query = query.switch(Signals).join(Category).join(CategoryLabel)
-                    joined_models.add(Category)
-                conditions.append(CategoryLabel.value.in_(val))
+                elif key == 'since_version':
+                    conditions.append(Signals.since_version.in_(val))
 
-        if conditions:
-            # Unpack and apply all collected conditions to the query using an AND logic
-            query = query.where(*conditions)
+                elif key == 'category':
+                    if Category not in joined_models:
+                        query = query.switch(Signals).join(Category).join(CategoryLabel)
+                        joined_models.add(Category)
+                    conditions.append(CategoryLabel.value.in_(val))
 
-        return query.distinct().dicts()
+            if conditions:
+                # Unpack and apply all collected conditions to the query using an AND logic
+                query = query.where(*conditions)
+
+            query = query.distinct().dicts()
+
+            return list(query)
