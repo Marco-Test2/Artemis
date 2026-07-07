@@ -141,6 +141,7 @@ class ArtemisDB:
                     .where(Signals.since_version
                     .is_null(False))
                     .distinct()
+                    .order_by(Signals.since_version.desc())
                     .scalars()
                 )
                 self.all_since_versions = list(query)
