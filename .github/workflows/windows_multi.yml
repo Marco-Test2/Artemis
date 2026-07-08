@@ -20,16 +20,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [ "Windows x64", "Windows ARM64" ]
+        target: [ "x64", "ARM64" ]
         include:
-          - target: "Windows x64"
+          - target: "x64"
             output-format: "app"
             runs-on: "windows-latest"
             platform: "windows"
             pre-command: |
               python -m pip install PySide6
               pyside6-rcc ./artemis.qrc -o artemis/resources.py
-          - target: "Windows ARM64"
+          - target: "ARM64"
             output-format: "app"
             runs-on: "windows-11-vs2026-arm"
             platform: "windows"
@@ -73,13 +73,7 @@ jobs:
 
       - name: Rename MSI to include Architecture
         run: |
-          for f in dist/*.msi; do
-            if [ -f "$f" ]; then
-              TARGET_CLEAN=$(echo "${{ matrix.target }}" | tr ' ' '-')
-              BASENAME=$(basename "$f" .msi)
-              mv "$f" "dist/${BASENAME}-${TARGET_CLEAN}.msi"
-            fi
-          done
+          mv dist/*.msi "dist/Artemis-${{ matrix.target }}.msi"
 
       - name: Upload Temporary MSI
         uses: actions/upload-artifact@v7
