@@ -60,7 +60,7 @@ jobs:
           briefcase build \
             ${{ matrix.platform }} \
             ${{ matrix.output-format }} \
-            --test --no-input --log \
+            --no-input --log \
             ${{ matrix.briefcase-args }}
 
       - name: Package App
@@ -68,8 +68,18 @@ jobs:
           briefcase package \
             ${{ matrix.platform }} \
             ${{ matrix.output-format }} \
-            --update --adhoc-sign --no-input --log \
+            --adhoc-sign --no-input --log \
             ${{ matrix.briefcase-args }}
+
+      - name: Rename MSI to include Architecture
+        run: |
+          for f in dist/*.msi; do
+            if [ -f "$f" ]; then
+              TARGET_CLEAN=$(echo "${{ matrix.target }}" | tr ' ' '-')
+              BASENAME=$(basename "$f" .msi)
+              mv "$f" "dist/${BASENAME}-${TARGET_CLEAN}.msi"
+            fi
+          done
 
       - name: Upload Temporary MSI
         uses: actions/upload-artifact@v7
