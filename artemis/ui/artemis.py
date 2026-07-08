@@ -126,7 +126,7 @@ class UIArtemis(QObject):
         self.filters_manager.load_filter_lists()
         self.populate_sig_list.emit(self.loaded_db.all_signals)
         # Updating status bar
-        self.bottom_info_bar(f"Database loaded with {self.loaded_db.count_signals} signals", "info")
+        self.bottom_info_bar(f"{self.loaded_db.name} v{self.loaded_db.version} | {self.loaded_db.count_signals} signals", "info")
 
 
     @Slot(int)

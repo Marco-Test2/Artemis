@@ -62,6 +62,10 @@ class FiltersManager(QObject):
                 self._parent.loaded_db._select_all_signals()
                 self._parent.clear_signal_page.emit()
                 self._parent.populate_sig_list.emit(self._parent.loaded_db.all_signals)
+                self._parent.bottom_info_bar(
+                    f"{self._parent.loaded_db.name} v{self._parent.loaded_db.version} | {self._parent.loaded_db.count_signals} signals",
+                    "info"
+                )
                 return
 
             try:
@@ -74,7 +78,7 @@ class FiltersManager(QObject):
 
                 total_signals = len(filtered_signals)
                 self._parent.bottom_info_bar(
-                    f"FILTERS ACTIVE: {total_signals} signals found", 
+                    f"{self._parent.loaded_db.name} v{self._parent.loaded_db.version} | {total_signals} ({self._parent.loaded_db.count_signals}) signals | FILTERS ACTIVE",
                     "warning"
                 )
 
